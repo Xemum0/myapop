@@ -3,12 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Routes - Mobilis Sales Rep Dashboard</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.js"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.css"
-    />
+    <title>Points of Sale - Mobilis Sales Rep Dashboard</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
     <style>
       :root {
@@ -133,12 +128,57 @@
         grid-area: main;
         padding: 15px;
         overflow-y: auto;
-        display: flex;
-        flex-direction: column;
         height: calc(100vh - 120px);
       }
 
-      .card {
+      .search-container {
+        position: relative;
+        margin-bottom: 15px;
+      }
+
+      .search-input {
+        width: 100%;
+        padding: 12px 40px 12px 15px;
+        border: none;
+        border-radius: 25px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        font-size: 0.9rem;
+      }
+
+      .search-icon {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #666;
+      }
+
+      .filter-controls {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+        overflow-x: auto;
+        padding-bottom: 5px;
+      }
+
+      .filter-chip {
+        background-color: white;
+        border-radius: 20px;
+        padding: 8px 15px;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+
+      .filter-chip.active {
+        background-color: var(--primary-color);
+        color: white;
+      }
+
+      .pos-card {
         background-color: white;
         border-radius: 8px;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -146,109 +186,80 @@
         margin-bottom: 15px;
       }
 
-      .card-header {
-        font-weight: 600;
-        margin-bottom: 15px;
+      .pos-header {
         display: flex;
         justify-content: space-between;
-        align-items: center;
+        margin-bottom: 10px;
       }
 
-      .card-body {
+      .pos-name {
+        font-weight: 600;
+        font-size: 1.1rem;
+      }
+
+      .pos-category {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 12px;
+        background-color: var(--light-color);
+        font-size: 0.7rem;
         color: var(--dark-color);
       }
 
-      .route-options {
+      .pos-details {
         display: grid;
-        grid-template-columns: 1fr;
-        gap: 15px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 10px;
+        font-size: 0.85rem;
       }
 
-      .form-group {
-        margin-bottom: 12px;
-      }
-
-      .form-label {
-        display: block;
-        margin-bottom: 5px;
-        font-size: 0.9rem;
-        color: #555;
-      }
-
-      .form-input,
-      .form-select {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 0.9rem;
-      }
-
-      .form-check {
+      .pos-detail-item {
         display: flex;
-        align-items: center;
-        gap: 8px;
-        margin: 8px 0;
+        flex-direction: column;
       }
 
-      .map-container {
-        flex: 1;
-        border-radius: 8px;
-        overflow: hidden;
-        margin-bottom: 15px;
+      .pos-detail-label {
+        color: #666;
+        font-size: 0.75rem;
       }
 
-      #route-map {
-        height: 100%;
-        width: 100%;
-        min-height: 250px;
-      }
-
-      .planned-visits {
-        max-height: 300px;
-        overflow-y: auto;
-      }
-
-      .visit-item {
-        display: flex;
-        align-items: center;
-        padding: 12px 0;
-        border-bottom: 1px solid #eee;
-      }
-
-      .visit-number {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        background-color: var(--primary-color);
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.8rem;
-        margin-right: 10px;
-      }
-
-      .visit-details {
-        flex: 1;
-      }
-
-      .visit-name {
+      .pos-detail-value {
         font-weight: 500;
       }
 
-      .visit-meta {
-        font-size: 0.8rem;
-        color: #666;
+      .pos-visit-info {
         display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-top: 2px;
+        justify-content: space-between;
+        padding-top: 10px;
+        border-top: 1px solid #eee;
+        font-size: 0.85rem;
       }
 
-      .visit-actions {
+      .pos-last-visit {
+        color: #666;
+      }
+
+      .pos-status {
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+      }
+
+      .status-active {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: var(--success-color);
+      }
+
+      .status-inactive {
+        background-color: rgba(108, 117, 125, 0.1);
+        color: #6c757d;
+      }
+
+      .pos-actions {
         display: flex;
-        gap: 5px;
+        gap: 10px;
+        margin-top: 10px;
       }
 
       .btn {
@@ -256,9 +267,10 @@
         border-radius: 4px;
         border: none;
         cursor: pointer;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 5px;
       }
 
@@ -269,28 +281,34 @@
 
       .btn-outline {
         background-color: transparent;
-        border: 1px solid var(--primary-color);
-        color: var(--primary-color);
+        border: 1px solid #ddd;
+        color: #666;
       }
 
       .btn-small {
-        padding: 5px 8px;
+        padding: 5px 10px;
         font-size: 0.8rem;
       }
 
-      .btn-block {
-        width: 100%;
-        justify-content: center;
-      }
-
-      .action-buttons {
-        display: flex;
-        gap: 10px;
-        margin-top: 15px;
-      }
-
-      .action-buttons .btn {
+      .btn-full {
         flex: 1;
+      }
+
+      .floating-btn {
+        position: fixed;
+        bottom: 70px;
+        right: 20px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        z-index: 100;
+        font-size: 1.2rem;
       }
     </style>
   </head>
@@ -298,7 +316,7 @@
     <div class="container">
       <!-- Header -->
       <header class="header">
-        <div class="header-title">Route Planning</div>
+        <div class="header-title">Points of Sale</div>
         <div class="header-actions">
           <div class="notifications">
             <i class="far fa-bell"></i>
@@ -311,169 +329,189 @@
 
       <!-- Main content area -->
       <main class="main-content">
-        <div class="card">
-          <div class="card-header">
-            <span>Route Settings</span>
+        <div class="search-container">
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search points of sale..."
+          />
+          <i class="fas fa-search search-icon"></i>
+        </div>
+
+        <div class="filter-controls">
+          <div class="filter-chip active">
+            <i class="fas fa-globe"></i>
+            <span>All</span>
           </div>
-          <div class="card-body">
-            <div class="route-options">
-              <div class="form-group">
-                <label class="form-label" for="route-date">Select Date</label>
-                <input
-                  type="date"
-                  id="route-date"
-                  class="form-input"
-                  value="2025-03-05"
-                />
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="start-point"
-                  >Starting Point</label
-                >
-                <select id="start-point" class="form-select">
-                  <option value="current">Current Location</option>
-                  <option value="office">Office</option>
-                  <option value="custom">Custom Location</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="optimization"
-                  >Optimization Preference</label
-                >
-                <select id="optimization" class="form-select">
-                  <option value="distance">Minimize Distance</option>
-                  <option value="time">Minimize Time</option>
-                  <option value="priority">Priority POS First</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">Additional Options</label>
-                <div class="form-check">
-                  <input type="checkbox" id="avoid-traffic" checked />
-                  <label for="avoid-traffic">Avoid Traffic</label>
-                </div>
-                <div class="form-check">
-                  <input type="checkbox" id="consider-hours" checked />
-                  <label for="consider-hours">Consider Opening Hours</label>
-                </div>
-                <div class="form-check">
-                  <input type="checkbox" id="include-breaks" />
-                  <label for="include-breaks">Include Breaks</label>
-                </div>
-              </div>
-
-              <button class="btn btn-primary btn-block">
-                <i class="fas fa-random"></i> Generate Optimized Route
-              </button>
-            </div>
+          <div class="filter-chip">
+            <i class="fas fa-mobile-alt"></i>
+            <span>Mobile</span>
+          </div>
+          <div class="filter-chip">
+            <i class="fas fa-laptop"></i>
+            <span>Electronics</span>
+          </div>
+          <div class="filter-chip">
+            <i class="fas fa-broadcast-tower"></i>
+            <span>Telecom</span>
+          </div>
+          <div class="filter-chip">
+            <i class="fas fa-store-alt"></i>
+            <span>Mixed</span>
           </div>
         </div>
 
-        <div class="map-container">
-          <div id="route-map"></div>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <span>Planned Visits</span>
-            <button class="btn btn-outline btn-small">
-              <i class="fas fa-filter"></i> Filter
-            </button>
+        <div class="pos-card">
+          <div class="pos-header">
+            <div class="pos-name">Tech Store Algiers</div>
+            <div class="pos-category">Electronics</div>
           </div>
-          <div class="planned-visits">
-            <div class="visit-item">
-              <div class="visit-number">1</div>
-              <div class="visit-details">
-                <div class="visit-name">Tech Store Algiers</div>
-                <div class="visit-meta">
-                  <span><i class="far fa-clock"></i> 09:00 - 09:30</span>
-                  <span><i class="fas fa-road"></i> 0 km (Starting Point)</span>
-                </div>
-              </div>
-              <div class="visit-actions">
-                <button class="btn btn-outline btn-small">
-                  <i class="fas fa-arrows-alt"></i>
-                </button>
-              </div>
+          <div class="pos-details">
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Address</span>
+              <span class="pos-detail-value">123 Central Blvd, Algiers</span>
             </div>
-
-            <div class="visit-item">
-              <div class="visit-number">2</div>
-              <div class="visit-details">
-                <div class="visit-name">Mobile Shop Central</div>
-                <div class="visit-meta">
-                  <span><i class="far fa-clock"></i> 10:15 - 10:45</span>
-                  <span><i class="fas fa-road"></i> 1.5 km</span>
-                </div>
-              </div>
-              <div class="visit-actions">
-                <button class="btn btn-outline btn-small">
-                  <i class="fas fa-arrows-alt"></i>
-                </button>
-              </div>
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Zone</span>
+              <span class="pos-detail-value">Zone A - Central</span>
             </div>
-
-            <div class="visit-item">
-              <div class="visit-number">3</div>
-              <div class="visit-details">
-                <div class="visit-name">Telecom Plus</div>
-                <div class="visit-meta">
-                  <span><i class="far fa-clock"></i> 13:30 - 14:00</span>
-                  <span><i class="fas fa-road"></i> 3.2 km</span>
-                </div>
-              </div>
-              <div class="visit-actions">
-                <button class="btn btn-outline btn-small">
-                  <i class="fas fa-arrows-alt"></i>
-                </button>
-              </div>
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Contact</span>
+              <span class="pos-detail-value">+213 555 123 456</span>
             </div>
-
-            <div class="visit-item">
-              <div class="visit-number">4</div>
-              <div class="visit-details">
-                <div class="visit-name">Smart Device Center</div>
-                <div class="visit-meta">
-                  <span><i class="far fa-clock"></i> 15:00 - 15:30</span>
-                  <span><i class="fas fa-road"></i> 2.8 km</span>
-                </div>
-              </div>
-              <div class="visit-actions">
-                <button class="btn btn-outline btn-small">
-                  <i class="fas fa-arrows-alt"></i>
-                </button>
-              </div>
-            </div>
-
-            <div class="visit-item">
-              <div class="visit-number">5</div>
-              <div class="visit-details">
-                <div class="visit-name">Connect Market</div>
-                <div class="visit-meta">
-                  <span><i class="far fa-clock"></i> 16:15 - 16:45</span>
-                  <span><i class="fas fa-road"></i> 4.5 km</span>
-                </div>
-              </div>
-              <div class="visit-actions">
-                <button class="btn btn-outline btn-small">
-                  <i class="fas fa-arrows-alt"></i>
-                </button>
-              </div>
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Opens</span>
+              <span class="pos-detail-value">09:00 - 18:00</span>
             </div>
           </div>
-
-          <div class="action-buttons">
-            <button class="btn btn-outline">
-              <i class="fas fa-save"></i> Save Route
+          <div class="pos-visit-info">
+            <div class="pos-last-visit">Last visit: Today, 09:15</div>
+            <div class="pos-status status-active">Active</div>
+          </div>
+          <div class="pos-actions">
+            <button class="btn btn-outline btn-full">
+              <i class="fas fa-map-marker-alt"></i> View on Map
             </button>
-            <button class="btn btn-primary">
-              <i class="fas fa-file-export"></i> Export
+            <button class="btn btn-primary btn-full">
+              <i class="fas fa-calendar-plus"></i> Schedule Visit
             </button>
           </div>
         </div>
+
+        <div class="pos-card">
+          <div class="pos-header">
+            <div class="pos-name">Mobile Shop Central</div>
+            <div class="pos-category">Mobile</div>
+          </div>
+          <div class="pos-details">
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Address</span>
+              <span class="pos-detail-value">45 Didouche Ave, Algiers</span>
+            </div>
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Zone</span>
+              <span class="pos-detail-value">Zone A - Central</span>
+            </div>
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Contact</span>
+              <span class="pos-detail-value">+213 555 789 123</span>
+            </div>
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Opens</span>
+              <span class="pos-detail-value">08:30 - 19:00</span>
+            </div>
+          </div>
+          <div class="pos-visit-info">
+            <div class="pos-last-visit">Last visit: Today, 10:30</div>
+            <div class="pos-status status-active">Active</div>
+          </div>
+          <div class="pos-actions">
+            <button class="btn btn-outline btn-full">
+              <i class="fas fa-map-marker-alt"></i> View on Map
+            </button>
+            <button class="btn btn-primary btn-full">
+              <i class="fas fa-calendar-plus"></i> Schedule Visit
+            </button>
+          </div>
+        </div>
+
+        <div class="pos-card">
+          <div class="pos-header">
+            <div class="pos-name">Telecom Plus</div>
+            <div class="pos-category">Telecom</div>
+          </div>
+          <div class="pos-details">
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Address</span>
+              <span class="pos-detail-value">78 Liberty St, Algiers</span>
+            </div>
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Zone</span>
+              <span class="pos-detail-value">Zone D - West</span>
+            </div>
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Contact</span>
+              <span class="pos-detail-value">+213 555 456 789</span>
+            </div>
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Opens</span>
+              <span class="pos-detail-value">09:00 - 17:30</span>
+            </div>
+          </div>
+          <div class="pos-visit-info">
+            <div class="pos-last-visit">Scheduled: Today, 13:30</div>
+            <div class="pos-status status-active">Active</div>
+          </div>
+          <div class="pos-actions">
+            <button class="btn btn-outline btn-full">
+              <i class="fas fa-map-marker-alt"></i> View on Map
+            </button>
+            <button class="btn btn-primary btn-full">
+              <i class="fas fa-calendar-plus"></i> Schedule Visit
+            </button>
+          </div>
+        </div>
+
+        <div class="pos-card">
+          <div class="pos-header">
+            <div class="pos-name">Smart Device Center</div>
+            <div class="pos-category">Electronics</div>
+          </div>
+          <div class="pos-details">
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Address</span>
+              <span class="pos-detail-value">12 Boulevard St, Algiers</span>
+            </div>
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Zone</span>
+              <span class="pos-detail-value">Zone D - West</span>
+            </div>
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Contact</span>
+              <span class="pos-detail-value">+213 555 321 654</span>
+            </div>
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Opens</span>
+              <span class="pos-detail-value">10:00 - 20:00</span>
+            </div>
+          </div>
+          <div class="pos-visit-info">
+            <div class="pos-last-visit">Last visit: 2 days ago</div>
+            <div class="pos-status status-inactive">Inactive</div>
+          </div>
+          <div class="pos-actions">
+            <button class="btn btn-outline btn-full">
+              <i class="fas fa-map-marker-alt"></i> View on Map
+            </button>
+            <button class="btn btn-primary btn-full">
+              <i class="fas fa-calendar-plus"></i> Schedule Visit
+            </button>
+          </div>
+        </div>
+
+        <a href="#" class="floating-btn">
+          <i class="fas fa-filter"></i>
+        </a>
       </main>
 
       <!-- Sidebar navigation -->
@@ -487,11 +525,11 @@
             <i class="fas fa-map-marked-alt"></i>
             <span>Territory</span>
           </li>
-          <li class="nav-item active">
+          <li class="nav-item">
             <i class="fas fa-route"></i>
             <span>Routes</span>
           </li>
-          <li class="nav-item">
+          <li class="nav-item active">
             <i class="fas fa-store"></i>
             <span>POS</span>
           </li>
@@ -502,96 +540,5 @@
         </ul>
       </aside>
     </div>
-
-    <script>
-      // Initialize map
-      const map = L.map("route-map").setView([36.7538, 3.0588], 13);
-
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "&copy; OpenStreetMap contributors",
-      }).addTo(map);
-
-      // Sample POS data for route
-      const routeData = [
-        {
-          id: 1,
-          name: "Tech Store Algiers",
-          lat: 36.7538,
-          lng: 3.0588,
-          time: "09:00 - 09:30",
-        },
-        {
-          id: 2,
-          name: "Mobile Shop Central",
-          lat: 36.7613,
-          lng: 3.0583,
-          time: "10:15 - 10:45",
-        },
-        {
-          id: 3,
-          name: "Telecom Plus",
-          lat: 36.748,
-          lng: 3.052,
-          time: "13:30 - 14:00",
-        },
-        {
-          id: 4,
-          name: "Smart Device Center",
-          lat: 36.762,
-          lng: 3.038,
-          time: "15:00 - 15:30",
-        },
-        {
-          id: 5,
-          name: "Connect Market",
-          lat: 36.739,
-          lng: 3.072,
-          time: "16:15 - 16:45",
-        },
-      ];
-
-      // Add markers for each POS in route
-      routeData.forEach((pos, index) => {
-        const marker = L.circleMarker([pos.lat, pos.lng], {
-          radius: 8,
-          fillColor: "#00a651",
-          color: "#fff",
-          weight: 2,
-          opacity: 1,
-          fillOpacity: 0.8,
-        }).addTo(map);
-
-        marker.bindPopup(`
-          <strong>${pos.name}</strong><br>
-          Scheduled: ${pos.time}<br>
-          Stop #${index + 1}
-        `);
-
-        // Add number labels
-        L.marker([pos.lat, pos.lng], {
-          icon: L.divIcon({
-            className: "visit-number-map",
-            html: `<div style="background-color:#fff; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-weight:bold; border:2px solid #00a651; font-size:11px;">${
-              index + 1
-            }</div>`,
-            iconSize: [18, 18],
-            iconAnchor: [9, 9],
-          }),
-        }).addTo(map);
-      });
-
-      // Draw route line
-      const routeCoordinates = routeData.map((pos) => [pos.lat, pos.lng]);
-      const routeLine = L.polyline(routeCoordinates, {
-        color: "#00a651",
-        weight: 3,
-        opacity: 0.7,
-        dashArray: "5, 10",
-        lineJoin: "round",
-      }).addTo(map);
-
-      // Fit map to route bounds
-      map.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
-    </script>
   </body>
 </html>
