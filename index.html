@@ -74,7 +74,7 @@
       }
 
       .user-avatar {
-        width: 40px;
+        width: 56px;
         height: 40px;
         border-radius: 50%;
         background-color: var(--primary-color);
@@ -187,14 +187,18 @@
       .map-container {
         height: 450px;
         position: relative;
+        width: 100%;
+        overflow: hidden;
       }
 
       #map {
         height: 100%;
         width: 100%;
+        z-index: 1;
         border-radius: 8px;
       }
 
+      /* Ensure controls stay within the map */
       .map-controls {
         position: absolute;
         top: 10px;
@@ -204,6 +208,12 @@
         padding: 5px;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         z-index: 1000;
+        max-width: 150px;
+      }
+      .leaflet-control-attribution {
+        max-width: 100%;
+        white-space: normal;
+        font-size: 9px;
       }
 
       .map-control-item {
@@ -221,6 +231,7 @@
       .visit-list {
         max-height: 400px;
         overflow-y: auto;
+        margin-bottom: 2.5rem;
       }
 
       .visit-item {
@@ -376,6 +387,15 @@
         .user-info span {
           display: none;
         }
+        .map-container {
+          height: 350px;
+          margin-bottom: 2rem;
+        }
+
+        .map-controls {
+          max-width: 120px;
+          z-index: 1;
+        }
       }
     </style>
   </head>
@@ -393,27 +413,27 @@
           </li>
           <li class="nav-item">
             <i class="fas fa-map-marked-alt"></i>
-            <a href="Territory.html"><span>Territory Map</span></a>
+            <span>Territory Map</span>
           </li>
           <li class="nav-item">
             <i class="fas fa-route"></i>
-            <a href="Routes.html"><span>Routes</span></a>
+            <span>Routes</span>
           </li>
           <li class="nav-item">
             <i class="fas fa-store"></i>
-            <a href="Points of Sale.html"><span>Points of Sale</span></a>
+            <span>Points of Sale</span>
           </li>
           <li class="nav-item">
             <i class="fas fa-search"></i>
-            <a href="Prospecting.html"><span>Prospecting</span></a>
+            <span>Prospecting</span>
           </li>
           <li class="nav-item">
             <i class="fas fa-comment-alt"></i>
-            <a href="Messages.html"><span>Messages</span></a>
+            <span>Messages</span>
           </li>
           <li class="nav-item">
             <i class="fas fa-cog"></i>
-            <a href="settings.html"><span>Settings</span></a>
+            <span>Settings</span>
           </li>
         </ul>
       </aside>
