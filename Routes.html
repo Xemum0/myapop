@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Routes - Mobilis Sales Rep Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
+    <style>
+      :root {
+        --primary-color: #00a651;
+        --secondary-color: #144734;
+        --light-color: #f4f6f9;
+        --dark-color: #343a40;
+        --danger-color: #dc3545;
+        --warning-color: #ffc107;
+        --success-color: #28a745;
+        --info-color: #17a2b8;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background-color: var(--light-color);
+      }
+
+      .container {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-template-rows: 60px 1fr auto;
+        grid-template-areas:
+          "header"
+          "main"
+          "sidebar";
+        height: 100vh;
+      }
+
+      /* Header styles */
+      .header {
+        grid-area: header;
+        background-color: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+      }
+
+      .header-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+      }
+
+      .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+      }
+
+      /* Sidebar styles */
+      .sidebar {
+        grid-area: sidebar;
+        background-color: var(--secondary-color);
+        color: white;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        display: flex;
+        overflow-x: auto;
+      }
+
+      .nav-list {
+        display: flex;
+        padding: 0;
+        width: 100%;
+      }
+
+      .nav-item {
+        flex-direction: column;
+        padding: 10px;
+        font-size: 0.7rem;
+        gap: 5px;
+        flex: 1;
+        text-align: center;
+        justify-content: center;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+      }
+
+      .nav-item i {
+        width: auto;
+        font-size: 1.2rem;
+      }
+
+      .nav-item:hover,
+      .nav-item.active {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+
+      /* Main content styles */
+      .main-content {
+        grid-area: main;
+        padding: 15px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 120px);
+      }
+
+      .card {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        padding: 15px;
+        margin-bottom: 15px;
+      }
+
+      .card-header {
+        font-weight: 600;
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .card-body {
+        color: var(--dark-color);
+      }
+
+      .route-options {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 15px;
+      }
+
+      .form-group {
+        margin-bottom: 12px;
+      }
+
+      .form-label {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 0.9rem;
+        color: #555;
+      }
+
+      .form-input,
+      .form-select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.9rem;
+      }
+
+      .form-check {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 8px 0;
+      }
+
+      .map-container {
+        flex: 1;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 15px;
+      }
+
+      #route-map {
+        height: 100%;
+        width: 100%;
+        min-height: 250px;
+      }
+
+      .planned-visits {
+        max-height: 300px;
+        overflow-y: auto;
+      }
+
+      .visit-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #eee;
+      }
+
+      .visit-number {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        margin-right: 10px;
+      }
+
+      .visit-details {
+        flex: 1;
+      }
+
+      .visit-name {
+        font-weight: 500;
+      }
+
+      .visit-meta {
+        font-size: 0.8rem;
+        color: #666;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 2px;
+      }
+
+      .visit-actions {
+        display: flex;
+        gap: 5px;
+      }
+
+      .btn {
+        padding: 8px 12px;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .btn-primary {
+        background-color: var(--primary-color);
+        color: white;
+      }
+
+      .btn-outline {
+        background-color: transparent;
+        border: 1px solid var(--primary-color);
+        color: var(--primary-color);
+      }
+
+      .btn-small {
+        padding: 5px 8px;
+        font-size: 0.8rem;
+      }
+
+      .btn-block {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+      }
+
+      .action-buttons .btn {
+        flex: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-title">Route Planning</div>
+        <div class="header-actions">
+          <div class="notifications">
+            <i class="far fa-bell"></i>
+          </div>
+          <div class="user-profile">
+            <div class="user-avatar">JD</div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main content area -->
+      <main class="main-content">
+        <div class="card">
+          <div class="card-header">
+            <span>Route Settings</span>
+          </div>
+          <div class="card-body">
+            <div class="route-options">
+              <div class="form-group">
+                <label class="form-label" for="route-date">Select Date</label>
+                <input
+                  type="date"
+                  id="route-date"
+                  class="form-input"
+                  value="2025-03-05"
+                />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="start-point">Starting Point</label>
+                <select id="start-point" class="form-select">
+                  <option value="current">Current Location</option>
+                  <option value="office">Office</option>
+                  <option value="custom">Custom Location</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="optimization">Optimization Preference</label>
+                <select id="optimization" class="form-select">
+                  <option value="distance">Minimize Distance</option>
+                  <option value="time">Minimize Time</option>
+                  <option value="priority">Priority POS First</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Additional Options</label>
+                <div class="form-check">
+                  <input type="checkbox" id="avoid-traffic" checked />
+                  <label for="avoid-traffic">Avoid Traffic</label>
+                </div>
+                <div class="form-check">
+                  <input type="checkbox" id="consider-hours" checked />
+                  <label for="consider-hours">Consider Opening Hours</label>
+                </div>
+                <div class="form-check">
+                  <input type="checkbox" id="include-breaks" />
+                  <label for="include-breaks">Include Breaks</label>
+                </div>
+              </div>
+
+              <button class="btn btn-primary btn-block">
+                <i class="fas fa-random"></i> Generate Optimized Route
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="map-container">
+          <div id="route-map"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span>Planned Visits</span>
+            <button class="btn btn-outline btn-small">
+              <i class="fas fa-filter"></i> Filter
+            </button>
+          </div>
+          <div class="planned-visits">
+            <div class="visit-item">
+              <div class="visit-number">1</div>
+              <div class="visit-details">
+                <div class="visit-name">Tech Store Algiers</div>
+                <div class="visit-meta">
+                  <span><i class="far fa-clock"></i> 09:00 - 09:30</span>
+                  <span><i class="fas fa-road"></i> 0 km (Starting Point)</span>
+                </div>
+              </div>
+              <div class="visit-actions">
+                <button class="btn btn-outline btn-small">
+                  <i class="fas fa-arrows-alt"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="visit-item">
+              <div class="visit-number">2</div>
+              <div class="visit-details">
+                <div class="visit-name">Mobile Shop Central</div>
+                <div class="visit-meta">
+                  <span><i class="far fa-clock"></i> 10:15 - 10:45</span>
+                  <span><i class="fas fa-road"></i> 1.5 km</span>
+                </div>
+              </div>
+              <div class="visit-actions">
+                <button class="btn btn-outline btn-small">
+                  <i class="fas fa-arrows-alt"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="visit-item">
+              <div class="visit-number">3</div>
+              <div class="visit-details">
+                <div class="visit-name">Telecom Plus</div>
+                <div class="visit-meta">
+                  <span><i class="far fa-clock"></i> 13:30 - 14:00</span>
+                  <span><i class="fas fa-road"></i> 3.2 km</span>
+                </div>
+              </div>
+              <div class="visit-actions">
+                <button class="btn btn-outline btn-small">
+                  <i class="fas fa-arrows-alt"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="visit-item">
+              <div class="visit-number">4</div>
+              <div class="visit-details">
+                <div class="visit-name">Smart Device Center</div>
+                <div class="visit-meta">
+                  <span><i class="far fa-clock"></i> 15:00 - 15:30</span>
+                  <span><i class="fas fa-road"></i> 2.8 km</span>
+                </div>
+              </div>
+              <div class="visit-actions">
+                <button class="btn btn-outline btn-small">
+                  <i class="fas fa-arrows-alt"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="visit-item">
+              <div class="visit-number">5</div>
+              <div class="visit-details">
+                <div class="visit-name">Connect Market</div>
+                <div class="visit-meta">
+                  <span><i class="far fa-clock"></i> 16:15 - 16:45</span>
+                  <span><i class="fas fa-road"></i> 4.5 km</span>
+                </div>
+              </div>
+              <div class="visit-actions">
+                <button class="btn btn-outline btn-small">
+                  <i class="fas fa-arrows-alt"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="action-buttons">
+            <button class="btn btn-outline">
+              <i class="fas fa-save"></i> Save Route
+            </button>
+            <button class="btn btn-primary">
+              <i class="fas fa-file-export"></i> Export
+            </button>
+          </div>
+        </div>
+      </main>
+
+      <!-- Sidebar navigation -->
+      <aside class="sidebar">
+        <ul class="nav-list">
+          <li class="nav-item">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-map-marked-alt"></i>
+            <span>Territory</span>
+          </li>
+          <li class="nav-item active">
+            <i class="fas fa-route"></i>
+            <span>Routes</span>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-store"></i>
+            <span>POS</span>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-search"></i>
+            <span>Prospecting</span>
+          </li>
+        </ul>
+      </aside>
+    </div>
+
+    <script>
+      // Initialize map
+      const map = L.map("route-map").setView([36.7538, 3.0588], 13);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors",
+      }).addTo(map);
+
+      // Sample POS data for route
+      const routeData = [
+        {
+          id: 1,
+          name: "Tech Store Algiers",
+          lat: 36.7538,
+          lng: 3.0588,
+          time: "09:00 - 09:30",
+        },
+        {
+          id: 2,
+          name: "Mobile Shop Central",
+          lat: 36.7613,
+          lng: 3.0583,
+          time: "10:15 - 10:45",
+        },
+        {
+          id: 3,
+          name: "Telecom Plus",
+          lat: 36.748,
+          lng: 3.052,
+          time: "13:30 - 14:00",
+        },
+        {
+          id: 4,
+          name: "Smart Device Center",
+          lat: 36.762,
+          lng: 3.038,
+          time: "15:00 - 15:30",
+        },
+        {
+          id: 5,
+          name: "Connect Market",
+          lat: 36.739,
+          lng: 3.072,
+          time: "16:15 - 16:45",
+        },
+      ];
+
+      // Add markers for each POS in route
+      routeData.forEach((pos, index) => {
+        const marker = L.circleMarker([pos.lat, pos.lng], {
+          radius: 8,
+          fillColor: "#00a651",
+          color: "#fff",
+          weight: 2,
+          opacity: 1,
+          fillOpacity: 0.8,
+        }).addTo(map);
+
+        marker.bindPopup(`
+          <strong>${pos.name}</strong><br>
+          Scheduled: ${pos.time}<br>
+          Stop #${index + 1}
+        `);
+        
+        // Add number labels
+        L.marker([pos.lat, pos.lng], {
+          icon: L.divIcon({
+            className: 'visit-number-map',
+            html: `<div style="background-color:#fff; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-weight:bold; border:2px solid #00a651; font-size:11px;">${index + 1}</div>`,
+            iconSize: [18, 18],
+            iconAnchor: [9, 9]
+          })
+        }).addTo(map);
+      });
+
+      // Draw route line
+      const routeCoordinates = routeData.map((pos) => [pos.lat, pos.lng]);
+      const routeLine = L.polyline(routeCoordinates, {
+        color: "#00a651",
+        weight: 3,
+        opacity: 0.7,
+        dashArray: "5, 10",
+        lineJoin: "round",
+      }).addTo(map);
+
+      // Fit map to route bounds
+      map.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
+    </script>
+  </body>
+</html>

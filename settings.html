@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Settings - Mobilis Sales Rep Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
+    <style>
+      :root {
+        --primary-color: #00a651;
+        --secondary-color: #144734;
+        --light-color: #f4f6f9;
+        --dark-color: #343a40;
+        --danger-color: #dc3545;
+        --warning-color: #ffc107;
+        --success-color: #28a745;
+        --info-color: #17a2b8;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background-color: var(--light-color);
+      }
+
+      .container {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-template-rows: 60px 1fr auto;
+        grid-template-areas:
+          "header"
+          "main"
+          "sidebar";
+        height: 100vh;
+      }
+
+      /* Header styles */
+      .header {
+        grid-area: header;
+        background-color: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+      }
+
+      .header-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+      }
+
+      .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+      }
+
+      /* Sidebar styles */
+      .sidebar {
+        grid-area: sidebar;
+        background-color: var(--secondary-color);
+        color: white;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        display: flex;
+        overflow-x: auto;
+      }
+
+      .nav-list {
+        display: flex;
+        padding: 0;
+        width: 100%;
+      }
+
+      .nav-item {
+        flex-direction: column;
+        padding: 10px;
+        font-size: 0.7rem;
+        gap: 5px;
+        flex: 1;
+        text-align: center;
+        justify-content: center;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+      }
+
+      .nav-item i {
+        width: auto;
+        font-size: 1.2rem;
+      }
+
+      .nav-item:hover,
+      .nav-item.active {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+
+      /* Main content styles */
+      .main-content {
+        grid-area: main;
+        padding: 15px;
+        overflow-y: auto;
+        height: calc(100vh - 120px);
+      }
+
+      .profile-section {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-bottom: 15px;
+        text-align: center;
+      }
+
+      .profile-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 2.5rem;
+        margin: 0 auto 15px;
+        position: relative;
+      }
+
+      .edit-avatar {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        background-color: white;
+        color: var(--primary-color);
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid var(--primary-color);
+        font-size: 0.9rem;
+        cursor: pointer;
+      }
+
+      .profile-name {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+      }
+
+      .profile-role {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 15px;
+      }
+
+      .profile-edit-button {
+        padding: 8px 20px;
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.9rem;
+      }
+
+      .settings-section {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        margin-bottom: 15px;
+        overflow: hidden;
+      }
+
+      .settings-header {
+        padding: 15px;
+        font-weight: 600;
+        border-bottom: 1px solid #eee;
+        color: #555;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .settings-item {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .settings-item:last-child {
+        border-bottom: none;
+      }
+
+      .settings-label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .settings-icon {
+        width: 20px;
+        color: #666;
+        text-align: center;
+      }
+
+      .settings-text {
+        font-size: 0.95rem;
+      }
+
+      .settings-desc {
+        font-size: 0.8rem;
+        color: #666;
+        margin-top: 3px;
+      }
+
+      .settings-control {
+        display: flex;
+        align-items: center;
+      }
+
+      .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+      }
+
+      .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: 0.4s;
+        border-radius: 24px;
+      }
+
+      .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+      }
+
+      input:checked + .toggle-slider {
+        background-color: var(--primary-color);
+      }
+
+      input:checked + .toggle-slider:before {
+        transform: translateX(20px);
+      }
+
+      .select-control {
+        padding: 5px 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        color: #555;
+      }
+
+      .chevron-icon {
+        color: #ccc;
+      }
+
+      .value-text {
+        font-size: 0.9rem;
+        color: #666;
+      }
+
+      .danger-zone {
+        background-color: #fff8f8;
+      }
+
+      .danger-item {
+        color: var(--danger-color);
+      }
+
+      .progress-container {
+        height: 6px;
+        background-color: #eee;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 10px;
+        width: 150px;
+      }
+
+      .progress-bar {
+        height: 100%;
+        background-color: var(--info-color);
+      }
+
+      .hint-text {
+        font-size: 0.75rem;
+        color: #999;
+        text-align: center;
+        margin: 15px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-title">Settings</div>
+        <div class="header-actions">
+          <div class="notifications">
+            <i class="far fa-bell"></i>
+          </div>
+          <div class="user-profile">
+            <div class="user-avatar">JD</div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main content area -->
+      <main class="main-content">
+        <div class="profile-section">
+          <div class="profile-avatar">
+            JD
+            <div class="edit-avatar">
+              <i class="fas fa-camera"></i>
+            </div>
+          </div>
+          <div class="profile-name">John Doe</div>
+          <div class="profile-role">Sales Representative - Algiers Region</div>
+          <button class="profile-edit-button">
+            <i class="fas fa-edit"></i> Edit Profile
+          </button>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-header">
+            <i class="fas fa-user"></i> Account Settings
+          </div>
+          
+          <div class="settings-item">
+            <div class="settings-label">
+              <div class="settings-icon">
+                <i class="fas fa-phone-alt"></i>
+              </div>
+              <div>
+                <div class="settings-text">Phone Number</div>
+                <div class="settings-desc">+213 555 123 456</div>
+              </div>
+            </div>
+            <div class="settings-control">
+              <i class="fas fa-chevron-right chevron-icon"></i>
+            </div>
+          </div>
+          
+          <div class="settings-item">
+            <div class="settings-label">
+              <div class="settings-icon">
+                <i class="fas fa-envelope"></i>
+              </div>
+              <div>
+                <div class="settings-text">Email Address</div>
+                <div class="settings-desc">john.doe@mobilis.dz</div>
+              </div>
+            </div>
+            <div class="settings-control">
+              <i class="fas fa-chevron-right chevron-icon"></i>
+            </div>
+          </div>
+          
+          <div class="settings-item">
+            <div class="settings-label">
+              <div class="settings-icon">
+                <i class="fas fa-lock"></i>
+              </div>
+              <div>
+                <div class="settings-text">Change Password</div>
+              </div>
+            </div>
+            <div class="settings-control">
+              <i class="fas fa-chevron-right chevron-icon"></i>
+            </div>
+          </div>
+        </div>
+        
+        <div class="settings-section">
+          <div class="settings-header">
+            <i class="fas fa-cog"></i> Application Settings
+          </div>
+          
+          <div class="settings-item">
+            <div class="settings-label">
+              <div class="settings-icon">
+                <i class="fas fa-language"></i>
+              </div>
+              <div>
+                <div class="settings-text">Language</div>
+              </div>
+            </div>
+            <div class="settings-control">
+              <select class="select-control">
+                <option>English</option>
+                <option>Français</option>
+                <option>العربية</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="settings-item">
+            <div class="settings-label">
+              <div class="settings-icon">
+                <i class="fas fa-bell"></i>
+              </div>
+              <div>
+                <div class="settings-text">Notifications</div>
+                <div class="settings-desc">Receive alerts about visits and messages</div>
+              </div>
+            </div>
+            <div class="settings-control">
+              <label class="toggle-switch">
+                <input type="checkbox" checked />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          
+          <div class="settings-item">
+            <div class="settings-label">
+              <div class="settings-icon">
+                <i class="fas fa-location-arrow"></i>
+              </div>
+              <div>
+                <div class="settings-text">Location Services</div>
+                <div class="settings-desc">Allow app to access your location</div>
+              </div>
+            </div>
+            <div class="settings-control">
+              <label class="toggle-switch">
+                <input type="checkbox" checked />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          
+
+        </div>
+        
+        <div class="settings-section">
+          <div class="settings-header">
+            <i class="fas fa-map-marked-alt"></i> Map Settings
+          </div>
+          
+          <div class="settings-item">
+            <div class="settings-label">
+              <div class="settings-icon">
+                <i class="fas fa-download"></i>
+              </div>
+              <div>
+                <div class="settings-text">Offline Maps</div>
+                <div class="settings-desc">Download map data for offline use</div>
+              </div>
+            </div>
+            <div class="settings-control">
+              <i class="fas fa-chevron-right chevron-icon"></i>
+            </div>
+          </div>
+          
+          <div class="settings-item">
+            <div class="settings-label">
+              <div class="settings-icon">
+                <i class="fas fa-map"></i>
+              </div>
+              <div>
+                <div class="settings-text">Default Map View</div>
+              </div>
+            </div>
+            <div class="settings-control">
+              <select class="select-control">
+                <option>Street</option>
+                <option>Satellite</option>
+                <option>Hybrid</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="settings-item">
+            <div class="settings-label">
+              <div class="settings-icon">
+                <i class="fas fa-route"></i>
+              </div>
+              <div>
+                <div class="settings-text">Route Calculation</div>
+                <div class="settings-desc">Default optimization method</div>
+              </div>
+            </div>
+            <div class="settings-control">
+              <select class="select-control">
+                <option>Distance</option>
+                <option>Time</option>
+                <option>Priority</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        
+
+        <div class="settings-section">
+          <div class="settings-header">
+            <i class="fas fa-sync"></i> Synchronization
+          </div>
+          
+          <div class="settings-item">
+            <div class="settings-label">
+              <div class="settings-icon">
+                <i class="fas fa-exchange-alt"></i>
+              </div>
+              <div>
+                <div class="settings-text">Auto-sync Data</div>
+                <div class="settings-desc">Keep data updated automatically</div>
+              </div>
+            </div>
+            <div class="settings-control">
+              <label class="toggle-switch">
+                <input type="checkbox" checked />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          
+          <div class="settings-item">
+            <div class="settings-label">
+              <div class="settings-icon">
+                <i class="fas fa-history"></i>
+              </div>
+              <div>
+                <div class="settings-text">Sync Frequency</div>
+                <div class="settings-desc">How often data is synchronized</div>
+              </div>
+            </div>
+            <div class="settings-control">
+              <select class="select-control">
+                <option>Every 15 mins</option>
+                <option>Every 30 mins</option>
+                <option>Every hour</option>
+                <option>Manual only</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="settings-item">
+            <div class="settings-label">
+              <div class="settings-icon">
+                <i class="fas fa-sync-alt"></i>
+              </div>
+              <div>
+                <div class="settings-text">Sync Now</div>
+                <div class="settings-desc">Last sync: Today, 10:45 AM</div>
+              </div>
+            </div>
+            <div class="settings-control">
+              <i class="fas fa-chevron-right chevron-icon"></i>
+            </div>
+          </div>
+        </div>
+        
+        <div class="settings-section danger-zone">
+          <div class="settings-header">
+            <i class="fas fa-exclamation-triangle"></i> Account Actions
+          </div>
+          
+          <div class="settings-item">
+            <div class="settings-label">
+              <div class="settings-icon">
+                <i class="fas fa-sign-out-alt"></i>
+              </div>
+              <div>
+                <div class="settings-text">Sign Out</div>
+              </div>
+            </div>
+            <div class="settings-control">
+              <i class="fas fa-chevron-right chevron-icon"></i>
+            </div>
+          </div>
+          
+          <div class="settings-item danger-item">
+            <div class="settings-label">
+              <div class="settings-icon">
+                <i class="fas fa-user-slash"></i>
+              </div>
+              <div>
+                <div class="settings-text">Reset Account Data</div>
+                <div class="settings-desc">Clear all personal data</div>
+              </div>
+            </div>
+            <div class="settings-control">
+              <i class="fas fa-chevron-right chevron-icon"></i>
+            </div>
+          </div>
+        </div>
+        
+        <div class="hint-text">
+          Mobilis Sales Rep Dashboard v2.4.1<br>
+          © 2025 Mobilis. All rights reserved.
+        </div>
+      </main>
+
+      <!-- Sidebar navigation -->
+      <aside class="sidebar">
+        <ul class="nav-list">
+          <li class="nav-item">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-map-marked-alt"></i>
+            <span>Territory</span>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-route"></i>
+            <span>Routes</span>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-store"></i>
+            <span>POS</span>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-search"></i>
+            <span>Prospecting</span>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-comment-alt"></i>
+            <span>Messages</span>
+          </li>
+          <li class="nav-item active">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+          </li>
+        </ul>
+      </aside>
+    </div>
+  </body>
+</html>

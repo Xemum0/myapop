@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mobilis Sales Rep Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <style>
+      :root {
+        --primary-color: #00a651;
+        --secondary-color: #144734;
+        --light-color: #f4f6f9;
+        --dark-color: #343a40;
+        --danger-color: #dc3545;
+        --warning-color: #ffc107;
+        --success-color: #28a745;
+        --info-color: #17a2b8;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background-color: var(--light-color);
+      }
+
+      .container {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        grid-template-rows: 60px 1fr;
+        grid-template-areas:
+          "sidebar header"
+          "sidebar main";
+        height: 100vh;
+      }
+
+      /* Header styles */
+      .header {
+        grid-area: header;
+        background-color: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+      }
+
+      .header-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+      }
+
+      .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+      }
+
+      /* Sidebar styles */
+      .sidebar {
+        grid-area: sidebar;
+        background-color: var(--secondary-color);
+        color: white;
+        overflow-y: auto;
+        z-index: 20;
+      }
+
+      .logo {
+        padding: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--primary-color);
+        height: 60px;
+      }
+
+      .logo img {
+        height: 40px;
+      }
+
+      .nav-list {
+        list-style: none;
+        padding: 20px 0;
+      }
+
+      .nav-item {
+        padding: 10px 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .nav-item:hover,
+      .nav-item.active {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+
+      .nav-item i {
+        width: 20px;
+        text-align: center;
+      }
+
+      /* Main content styles */
+      .main-content {
+        grid-area: main;
+        padding: 20px;
+        overflow-y: auto;
+      }
+
+      .dashboard {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+
+      .card {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+      }
+
+      .card-header {
+        font-weight: 600;
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .card-body {
+        color: var(--dark-color);
+      }
+
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+      }
+
+      .stat-item {
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: var(--primary-color);
+      }
+
+      .stat-label {
+        font-size: 0.85rem;
+        color: var(--dark-color);
+      }
+
+      .map-container {
+        height: 450px;
+        position: relative;
+      }
+
+      #map {
+        height: 100%;
+        width: 100%;
+        border-radius: 8px;
+      }
+
+      .map-controls {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: white;
+        border-radius: 4px;
+        padding: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+      }
+
+      .map-control-item {
+        padding: 5px 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .map-control-item:hover {
+        background-color: var(--light-color);
+      }
+
+      .visit-list {
+        max-height: 400px;
+        overflow-y: auto;
+      }
+
+      .visit-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+        gap: 10px;
+      }
+
+      .visit-status {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
+
+      .status-pending {
+        background-color: var(--warning-color);
+      }
+
+      .status-completed {
+        background-color: var(--success-color);
+      }
+
+      .status-missed {
+        background-color: var(--danger-color);
+      }
+
+      .visit-details {
+        flex: 1;
+      }
+
+      .visit-name {
+        font-weight: 500;
+      }
+
+      .visit-meta {
+        font-size: 0.8rem;
+        color: #666;
+        display: flex;
+        gap: 10px;
+      }
+
+      .visit-actions {
+        display: flex;
+        gap: 5px;
+      }
+
+      .btn {
+        padding: 5px 10px;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .btn-primary {
+        background-color: var(--primary-color);
+        color: white;
+      }
+
+      .btn-outline {
+        background-color: transparent;
+        border: 1px solid var(--primary-color);
+        color: var(--primary-color);
+      }
+
+      .btn-small {
+        padding: 3px 6px;
+        font-size: 0.8rem;
+      }
+
+      .tab-container {
+        border-bottom: 1px solid #ddd;
+        margin-bottom: 15px;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 20px;
+      }
+
+      .tab {
+        padding: 10px 0;
+        cursor: pointer;
+        position: relative;
+      }
+
+      .tab.active {
+        color: var(--primary-color);
+        font-weight: 500;
+      }
+
+      .tab.active::after {
+        content: "";
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background-color: var(--primary-color);
+      }
+
+      /* Mobile Responsive */
+      @media (max-width: 768px) {
+        .container {
+          grid-template-columns: 1fr;
+          grid-template-rows: 60px 1fr auto;
+          grid-template-areas:
+            "header"
+            "main"
+            "sidebar";
+        }
+
+        .sidebar {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 60px;
+          display: flex;
+          overflow-x: auto;
+        }
+
+        .logo {
+          display: none;
+        }
+
+        .nav-list {
+          display: flex;
+          padding: 0;
+          width: 100%;
+        }
+
+        .nav-item {
+          flex-direction: column;
+          padding: 10px;
+          font-size: 0.7rem;
+          gap: 5px;
+          flex: 1;
+          text-align: center;
+          justify-content: center;
+        }
+
+        .nav-item i {
+          width: auto;
+          font-size: 1.2rem;
+        }
+
+        .user-info span {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Sidebar navigation -->
+      <aside class="sidebar">
+        <div class="logo">
+          <img src="/api/placeholder/120/50" alt="Mobilis Logo" />
+        </div>
+        <ul class="nav-list">
+          <li class="nav-item active">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-map-marked-alt"></i>
+            <a href="Territory.html"><span>Territory Map</span></a>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-route"></i>
+            <a href="Routes.html"><span>Routes</span></a>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-store"></i>
+            <a href="Points of Sale.html"><span>Points of Sale</span></a>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-search"></i>
+            <a href="Prospecting.html"><span>Prospecting</span></a>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-comment-alt"></i>
+            <a href="Messages.html"><span>Messages</span></a>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-cog"></i>
+            <a href="settings.html"><span>Settings</span></a>
+          </li>
+        </ul>
+      </aside>
+
+      <!-- Header -->
+      <header class="header">
+        <div class="header-title">Sales Representatives Dashboard</div>
+        <div class="header-actions">
+          <div class="notifications">
+            <i class="far fa-bell"></i>
+          </div>
+          <div class="user-profile">
+            <div class="user-avatar">JD</div>
+            <span>John Doe</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main content area -->
+      <main class="main-content">
+        <div class="dashboard">
+          <div class="card">
+            <div class="card-header">
+              <span>Today's Summary</span>
+              <span><i class="far fa-calendar-alt"></i> March 4, 2025</span>
+            </div>
+            <div class="card-body">
+              <div class="stat-grid">
+                <div class="stat-item">
+                  <div class="stat-value">12/15</div>
+                  <div class="stat-label">Visits Completed</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value">3</div>
+                  <div class="stat-label">New Prospects</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value">42km</div>
+                  <div class="stat-label">Distance Traveled</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-value">4:35h</div>
+                  <div class="stat-label">Total Field Time</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span>Territory Coverage</span>
+            </div>
+            <div class="card-body">
+              <div style="height: 160px">
+                <canvas id="coverageChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span>Performance Stats</span>
+            </div>
+            <div class="card-body">
+              <div style="height: 160px">
+                <canvas id="performanceChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card map-container">
+          <div class="card-header">
+            <span>Field Operations Map</span>
+            <div>
+              <button class="btn btn-outline btn-small">
+                <i class="fas fa-filter"></i> Filter
+              </button>
+            </div>
+          </div>
+          <div id="map"></div>
+          <div class="map-controls">
+            <div class="map-control-item">
+              <i class="fas fa-layer-group"></i>
+              <span>Layers</span>
+            </div>
+            <div class="map-control-item">
+              <i class="fas fa-location-arrow"></i>
+              <span>My Location</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span>Visit Management</span>
+            <button class="btn btn-primary btn-small">
+              <i class="fas fa-plus"></i> Add Visit
+            </button>
+          </div>
+          <div class="tab-container">
+            <div class="tabs">
+              <div class="tab active">Today</div>
+              <div class="tab">Tomorrow</div>
+              <div class="tab">Week</div>
+            </div>
+          </div>
+          <div class="visit-list">
+            <div class="visit-item">
+              <div class="visit-status status-completed"></div>
+              <div class="visit-details">
+                <div class="visit-name">Tech Store Algiers</div>
+                <div class="visit-meta">
+                  <span><i class="far fa-clock"></i> 09:00 - 09:30</span>
+                  <span><i class="fas fa-check-circle"></i> Completed</span>
+                </div>
+              </div>
+              <div class="visit-actions">
+                <button class="btn btn-outline btn-small">
+                  <i class="fas fa-info-circle"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="visit-item">
+              <div class="visit-status status-completed"></div>
+              <div class="visit-details">
+                <div class="visit-name">Mobile Shop Central</div>
+                <div class="visit-meta">
+                  <span><i class="far fa-clock"></i> 10:15 - 10:45</span>
+                  <span><i class="fas fa-check-circle"></i> Completed</span>
+                </div>
+              </div>
+              <div class="visit-actions">
+                <button class="btn btn-outline btn-small">
+                  <i class="fas fa-info-circle"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="visit-item">
+              <div class="visit-status status-pending"></div>
+              <div class="visit-details">
+                <div class="visit-name">Telecom Plus</div>
+                <div class="visit-meta">
+                  <span><i class="far fa-clock"></i> 13:30 - 14:00</span>
+                  <span><i class="fas fa-hourglass-half"></i> Pending</span>
+                </div>
+              </div>
+              <div class="visit-actions">
+                <button class="btn btn-primary btn-small">
+                  <i class="fas fa-sign-in-alt"></i> Check-in
+                </button>
+                <button class="btn btn-outline btn-small">
+                  <i class="fas fa-info-circle"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="visit-item">
+              <div class="visit-status status-pending"></div>
+              <div class="visit-details">
+                <div class="visit-name">Smart Device Center</div>
+                <div class="visit-meta">
+                  <span><i class="far fa-clock"></i> 15:00 - 15:30</span>
+                  <span><i class="fas fa-hourglass-half"></i> Pending</span>
+                </div>
+              </div>
+              <div class="visit-actions">
+                <button class="btn btn-outline btn-small">
+                  <i class="fas fa-info-circle"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="visit-item">
+              <div class="visit-status status-pending"></div>
+              <div class="visit-details">
+                <div class="visit-name">Connect Market</div>
+                <div class="visit-meta">
+                  <span><i class="far fa-clock"></i> 16:15 - 16:45</span>
+                  <span><i class="fas fa-hourglass-half"></i> Pending</span>
+                </div>
+              </div>
+              <div class="visit-actions">
+                <button class="btn btn-outline btn-small">
+                  <i class="fas fa-info-circle"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      // Initialize map
+      const map = L.map("map").setView([36.7538, 3.0588], 12); // Default to Algiers
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors",
+      }).addTo(map);
+
+      // Sample POS data
+      const posData = [
+        {
+          id: 1,
+          name: "Tech Store Algiers",
+          lat: 36.7538,
+          lng: 3.0588,
+          status: "completed",
+        },
+        {
+          id: 2,
+          name: "Mobile Shop Central",
+          lat: 36.7613,
+          lng: 3.0583,
+          status: "completed",
+        },
+        {
+          id: 3,
+          name: "Telecom Plus",
+          lat: 36.748,
+          lng: 3.052,
+          status: "pending",
+        },
+        {
+          id: 4,
+          name: "Smart Device Center",
+          lat: 36.762,
+          lng: 3.038,
+          status: "pending",
+        },
+        {
+          id: 5,
+          name: "Connect Market",
+          lat: 36.739,
+          lng: 3.072,
+          status: "pending",
+        },
+      ];
+
+      // Add markers for each POS
+      posData.forEach((pos) => {
+        const markerColor = pos.status === "completed" ? "#28a745" : "#ffc107";
+
+        const marker = L.circleMarker([pos.lat, pos.lng], {
+          radius: 8,
+          fillColor: markerColor,
+          color: "#fff",
+          weight: 2,
+          opacity: 1,
+          fillOpacity: 0.8,
+        }).addTo(map);
+
+        marker.bindPopup(`
+                <strong>${pos.name}</strong><br>
+                Status: ${
+                  pos.status === "completed" ? "Visited" : "Pending"
+                }<br>
+                ${
+                  pos.status === "pending"
+                    ? '<button style="background-color: #00a651; color: white; border: none; padding: 5px 10px; border-radius: 4px; margin-top: 5px; cursor: pointer;">Check-in</button>'
+                    : ""
+                }
+            `);
+      });
+
+      // Draw route line
+      const routeCoordinates = posData.map((pos) => [pos.lat, pos.lng]);
+      const routeLine = L.polyline(routeCoordinates, {
+        color: "#00a651",
+        weight: 3,
+        opacity: 0.7,
+        dashArray: "10, 10",
+        lineJoin: "round",
+      }).addTo(map);
+
+      // Current location
+      L.circleMarker([36.748, 3.052], {
+        radius: 8,
+        fillColor: "#007bff",
+        color: "#fff",
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 0.8,
+      })
+        .addTo(map)
+        .bindPopup("Your current location");
+
+      // Initialize Charts
+      const coverageCtx = document
+        .getElementById("coverageChart")
+        .getContext("2d");
+      const coverageChart = new Chart(coverageCtx, {
+        type: "doughnut",
+        data: {
+          labels: ["Visited", "Pending", "Missed"],
+          datasets: [
+            {
+              data: [12, 3, 0],
+              backgroundColor: ["#28a745", "#ffc107", "#dc3545"],
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: "right",
+              labels: {
+                boxWidth: 12,
+              },
+            },
+          },
+        },
+      });
+
+      const perfCtx = document
+        .getElementById("performanceChart")
+        .getContext("2d");
+      const perfChart = new Chart(perfCtx, {
+        type: "bar",
+        data: {
+          labels: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+          datasets: [
+            {
+              label: "Visits Completed",
+              data: [14, 13, 15, 12, 10],
+              backgroundColor: "#00a651",
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false,
+            },
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 20,
+            },
+          },
+        },
+      });
+    </script>
+  </body>
+</html>

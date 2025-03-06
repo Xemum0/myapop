@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Points of Sale - Mobilis Sales Rep Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
+    <style>
+      :root {
+        --primary-color: #00a651;
+        --secondary-color: #144734;
+        --light-color: #f4f6f9;
+        --dark-color: #343a40;
+        --danger-color: #dc3545;
+        --warning-color: #ffc107;
+        --success-color: #28a745;
+        --info-color: #17a2b8;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background-color: var(--light-color);
+      }
+
+      .container {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-template-rows: 60px 1fr auto;
+        grid-template-areas:
+          "header"
+          "main"
+          "sidebar";
+        height: 100vh;
+      }
+
+      /* Header styles */
+      .header {
+        grid-area: header;
+        background-color: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+      }
+
+      .header-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+      }
+
+      .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+      }
+
+      /* Sidebar styles */
+      .sidebar {
+        grid-area: sidebar;
+        background-color: var(--secondary-color);
+        color: white;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        display: flex;
+        overflow-x: auto;
+      }
+
+      .nav-list {
+        display: flex;
+        padding: 0;
+        width: 100%;
+      }
+
+      .nav-item {
+        flex-direction: column;
+        padding: 10px;
+        font-size: 0.7rem;
+        gap: 5px;
+        flex: 1;
+        text-align: center;
+        justify-content: center;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+      }
+
+      .nav-item i {
+        width: auto;
+        font-size: 1.2rem;
+      }
+
+      .nav-item:hover,
+      .nav-item.active {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+
+      /* Main content styles */
+      .main-content {
+        grid-area: main;
+        padding: 15px;
+        overflow-y: auto;
+        height: calc(100vh - 120px);
+      }
+
+      .search-container {
+        position: relative;
+        margin-bottom: 15px;
+      }
+
+      .search-input {
+        width: 100%;
+        padding: 12px 40px 12px 15px;
+        border: none;
+        border-radius: 25px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        font-size: 0.9rem;
+      }
+
+      .search-icon {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #666;
+      }
+
+      .filter-controls {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+        overflow-x: auto;
+        padding-bottom: 5px;
+      }
+
+      .filter-chip {
+        background-color: white;
+        border-radius: 20px;
+        padding: 8px 15px;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+
+      .filter-chip.active {
+        background-color: var(--primary-color);
+        color: white;
+      }
+
+      .pos-card {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        padding: 15px;
+        margin-bottom: 15px;
+      }
+
+      .pos-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+
+      .pos-name {
+        font-weight: 600;
+        font-size: 1.1rem;
+      }
+
+      .pos-category {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 12px;
+        background-color: var(--light-color);
+        font-size: 0.7rem;
+        color: var(--dark-color);
+      }
+
+      .pos-details {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 10px;
+        font-size: 0.85rem;
+      }
+
+      .pos-detail-item {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .pos-detail-label {
+        color: #666;
+        font-size: 0.75rem;
+      }
+
+      .pos-detail-value {
+        font-weight: 500;
+      }
+
+      .pos-visit-info {
+        display: flex;
+        justify-content: space-between;
+        padding-top: 10px;
+        border-top: 1px solid #eee;
+        font-size: 0.85rem;
+      }
+
+      .pos-last-visit {
+        color: #666;
+      }
+
+      .pos-status {
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+      }
+
+      .status-active {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: var(--success-color);
+      }
+
+      .status-inactive {
+        background-color: rgba(108, 117, 125, 0.1);
+        color: #6c757d;
+      }
+
+      .pos-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .btn {
+        padding: 8px 12px;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+      }
+
+      .btn-primary {
+        background-color: var(--primary-color);
+        color: white;
+      }
+
+      .btn-outline {
+        background-color: transparent;
+        border: 1px solid #ddd;
+        color: #666;
+      }
+
+      .btn-small {
+        padding: 5px 10px;
+        font-size: 0.8rem;
+      }
+
+      .btn-full {
+        flex: 1;
+      }
+
+      .floating-btn {
+        position: fixed;
+        bottom: 70px;
+        right: 20px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        z-index: 100;
+        font-size: 1.2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-title">Points of Sale</div>
+        <div class="header-actions">
+          <div class="notifications">
+            <i class="far fa-bell"></i>
+          </div>
+          <div class="user-profile">
+            <div class="user-avatar">JD</div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main content area -->
+      <main class="main-content">
+        <div class="search-container">
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search points of sale..."
+          />
+          <i class="fas fa-search search-icon"></i>
+        </div>
+
+        <div class="filter-controls">
+          <div class="filter-chip active">
+            <i class="fas fa-globe"></i>
+            <span>All</span>
+          </div>
+          <div class="filter-chip">
+            <i class="fas fa-mobile-alt"></i>
+            <span>Mobile</span>
+          </div>
+          <div class="filter-chip">
+            <i class="fas fa-laptop"></i>
+            <span>Electronics</span>
+          </div>
+          <div class="filter-chip">
+            <i class="fas fa-broadcast-tower"></i>
+            <span>Telecom</span>
+          </div>
+          <div class="filter-chip">
+            <i class="fas fa-store-alt"></i>
+            <span>Mixed</span>
+          </div>
+        </div>
+
+        <div class="pos-card">
+          <div class="pos-header">
+            <div class="pos-name">Tech Store Algiers</div>
+            <div class="pos-category">Electronics</div>
+          </div>
+          <div class="pos-details">
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Address</span>
+              <span class="pos-detail-value">123 Central Blvd, Algiers</span>
+            </div>
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Zone</span>
+              <span class="pos-detail-value">Zone A - Central</span>
+            </div>
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Contact</span>
+              <span class="pos-detail-value">+213 555 123 456</span>
+            </div>
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Opens</span>
+              <span class="pos-detail-value">09:00 - 18:00</span>
+            </div>
+          </div>
+          <div class="pos-visit-info">
+            <div class="pos-last-visit">Last visit: Today, 09:15</div>
+            <div class="pos-status status-active">Active</div>
+          </div>
+          <div class="pos-actions">
+            <button class="btn btn-outline btn-full">
+              <i class="fas fa-map-marker-alt"></i> View on Map
+            </button>
+            <button class="btn btn-primary btn-full">
+              <i class="fas fa-calendar-plus"></i> Schedule Visit
+            </button>
+          </div>
+        </div>
+
+        <div class="pos-card">
+          <div class="pos-header">
+            <div class="pos-name">Mobile Shop Central</div>
+            <div class="pos-category">Mobile</div>
+          </div>
+          <div class="pos-details">
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Address</span>
+              <span class="pos-detail-value">45 Didouche Ave, Algiers</span>
+            </div>
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Zone</span>
+              <span class="pos-detail-value">Zone A - Central</span>
+            </div>
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Contact</span>
+              <span class="pos-detail-value">+213 555 789 123</span>
+            </div>
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Opens</span>
+              <span class="pos-detail-value">08:30 - 19:00</span>
+            </div>
+          </div>
+          <div class="pos-visit-info">
+            <div class="pos-last-visit">Last visit: Today, 10:30</div>
+            <div class="pos-status status-active">Active</div>
+          </div>
+          <div class="pos-actions">
+            <button class="btn btn-outline btn-full">
+              <i class="fas fa-map-marker-alt"></i> View on Map
+            </button>
+            <button class="btn btn-primary btn-full">
+              <i class="fas fa-calendar-plus"></i> Schedule Visit
+            </button>
+          </div>
+        </div>
+
+        <div class="pos-card">
+          <div class="pos-header">
+            <div class="pos-name">Telecom Plus</div>
+            <div class="pos-category">Telecom</div>
+          </div>
+          <div class="pos-details">
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Address</span>
+              <span class="pos-detail-value">78 Liberty St, Algiers</span>
+            </div>
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Zone</span>
+              <span class="pos-detail-value">Zone D - West</span>
+            </div>
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Contact</span>
+              <span class="pos-detail-value">+213 555 456 789</span>
+            </div>
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Opens</span>
+              <span class="pos-detail-value">09:00 - 17:30</span>
+            </div>
+          </div>
+          <div class="pos-visit-info">
+            <div class="pos-last-visit">Scheduled: Today, 13:30</div>
+            <div class="pos-status status-active">Active</div>
+          </div>
+          <div class="pos-actions">
+            <button class="btn btn-outline btn-full">
+              <i class="fas fa-map-marker-alt"></i> View on Map
+            </button>
+            <button class="btn btn-primary btn-full">
+              <i class="fas fa-calendar-plus"></i> Schedule Visit
+            </button>
+          </div>
+        </div>
+
+        <div class="pos-card">
+          <div class="pos-header">
+            <div class="pos-name">Smart Device Center</div>
+            <div class="pos-category">Electronics</div>
+          </div>
+          <div class="pos-details">
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Address</span>
+              <span class="pos-detail-value">12 Boulevard St, Algiers</span>
+            </div>
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Zone</span>
+              <span class="pos-detail-value">Zone D - West</span>
+            </div>
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Contact</span>
+              <span class="pos-detail-value">+213 555 321 654</span>
+            </div>
+            <div class="pos-detail-item">
+              <span class="pos-detail-label">Opens</span>
+              <span class="pos-detail-value">10:00 - 20:00</span>
+            </div>
+          </div>
+          <div class="pos-visit-info">
+            <div class="pos-last-visit">Last visit: 2 days ago</div>
+            <div class="pos-status status-inactive">Inactive</div>
+          </div>
+          <div class="pos-actions">
+            <button class="btn btn-outline btn-full">
+              <i class="fas fa-map-marker-alt"></i> View on Map
+            </button>
+            <button class="btn btn-primary btn-full">
+              <i class="fas fa-calendar-plus"></i> Schedule Visit
+            </button>
+          </div>
+        </div>
+
+        <a href="#" class="floating-btn">
+          <i class="fas fa-filter"></i>
+        </a>
+      </main>
+
+      <!-- Sidebar navigation -->
+      <aside class="sidebar">
+        <ul class="nav-list">
+          <li class="nav-item">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-map-marked-alt"></i>
+            <span>Territory</span>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-route"></i>
+            <span>Routes</span>
+          </li>
+          <li class="nav-item active">
+            <i class="fas fa-store"></i>
+            <span>POS</span>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-search"></i>
+            <span>Prospecting</span>
+          </li>
+        </ul>
+      </aside>
+    </div>
+  </body>
+</html>

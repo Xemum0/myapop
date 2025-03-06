@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Messages - Mobilis Sales Rep Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
+    <style>
+      :root {
+        --primary-color: #00a651;
+        --secondary-color: #144734;
+        --light-color: #f4f6f9;
+        --dark-color: #343a40;
+        --danger-color: #dc3545;
+        --warning-color: #ffc107;
+        --success-color: #28a745;
+        --info-color: #17a2b8;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background-color: var(--light-color);
+      }
+
+      .container {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-template-rows: 60px 1fr auto;
+        grid-template-areas:
+          "header"
+          "main"
+          "sidebar";
+        height: 100vh;
+      }
+
+      /* Header styles */
+      .header {
+        grid-area: header;
+        background-color: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+      }
+
+      .header-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+      }
+
+      .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+      }
+
+      /* Sidebar styles */
+      .sidebar {
+        grid-area: sidebar;
+        background-color: var(--secondary-color);
+        color: white;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        display: flex;
+        overflow-x: auto;
+      }
+
+      .nav-list {
+        display: flex;
+        padding: 0;
+        width: 100%;
+      }
+
+      .nav-item {
+        flex-direction: column;
+        padding: 10px;
+        font-size: 0.7rem;
+        gap: 5px;
+        flex: 1;
+        text-align: center;
+        justify-content: center;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+      }
+
+      .nav-item i {
+        width: auto;
+        font-size: 1.2rem;
+      }
+
+      .nav-item:hover,
+      .nav-item.active {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+
+      /* Main content styles */
+      .main-content {
+        grid-area: main;
+        height: calc(100vh - 120px);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .search-bar {
+        background-color: white;
+        padding: 12px 15px;
+        position: relative;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      .search-input {
+        width: 100%;
+        padding: 8px 12px 8px 35px;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        font-size: 0.9rem;
+      }
+
+      .search-icon {
+        position: absolute;
+        left: 25px;
+        top: 21px;
+        color: #999;
+        font-size: 0.9rem;
+      }
+
+      .conversation-list {
+        flex: 1;
+        overflow-y: auto;
+        background-color: white;
+      }
+
+      .conversation-item {
+        display: flex;
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        gap: 12px;
+        cursor: pointer;
+        position: relative;
+      }
+
+      .conversation-item:hover {
+        background-color: #f9f9f9;
+      }
+
+      .conversation-item.active {
+        background-color: #f0f7f4;
+      }
+
+      .contact-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: #eee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        color: var(--dark-color);
+        font-size: 1.2rem;
+      }
+
+      .avatar-manager {
+        background-color: #e3f2fd;
+        color: #0d47a1;
+      }
+
+      .avatar-team {
+        background-color: #e8f5e9;
+        color: #1b5e20;
+      }
+
+      .avatar-support {
+        background-color: #fff3e0;
+        color: #e65100;
+      }
+
+      .conversation-details {
+        flex: 1;
+      }
+
+      .conversation-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+      }
+
+      .contact-name {
+        font-weight: 500;
+      }
+
+      .message-time {
+        font-size: 0.75rem;
+        color: #666;
+      }
+
+      .message-preview {
+        font-size: 0.85rem;
+        color: #666;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 230px;
+      }
+
+      .unread-indicator {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+      }
+
+      /* Chat Interface */
+      .chat-interface {
+        display: none; /* Hidden initially */
+        flex-direction: column;
+        height: 100%;
+        position: absolute;
+        top: 60px;
+        left: 0;
+        right: 0;
+        bottom: 60px;
+        background-color: white;
+        z-index: 5;
+      }
+
+      .chat-header {
+        display: flex;
+        align-items: center;
+        padding: 12px 15px;
+        background-color: white;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      .back-button {
+        margin-right: 15px;
+        font-size: 1.2rem;
+        color: #555;
+        cursor: pointer;
+      }
+
+      .chat-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-right: 12px;
+        background-color: #eee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        color: var(--dark-color);
+        font-size: 1rem;
+      }
+
+      .chat-contact-info {
+        flex: 1;
+      }
+
+      .chat-contact-name {
+        font-weight: 500;
+      }
+
+      .chat-contact-status {
+        font-size: 0.75rem;
+        color: #666;
+      }
+
+      .chat-options {
+        font-size: 1.2rem;
+        color: #555;
+        cursor: pointer;
+      }
+
+      .chat-messages {
+        flex: 1;
+        padding: 15px;
+        overflow-y: auto;
+        background-color: #f5f5f5;
+      }
+
+      .message-group {
+        margin-bottom: 15px;
+      }
+
+      .message-date {
+        text-align: center;
+        font-size: 0.75rem;
+        color: #666;
+        margin: 20px 0 15px;
+        position: relative;
+      }
+
+      .message-date::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        width: 40%;
+        height: 1px;
+        background-color: #ddd;
+      }
+
+      .message-date::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        top: 50%;
+        width: 40%;
+        height: 1px;
+        background-color: #ddd;
+      }
+
+      .message {
+        max-width: 75%;
+        margin-bottom: 10px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        position: relative;
+      }
+
+      .message-time {
+        font-size: 0.7rem;
+        color: #999;
+        margin-top: 3px;
+        text-align: right;
+      }
+
+      .message-received {
+        background-color: white;
+        border-top-left-radius: 0;
+        align-self: flex-start;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        margin-right: auto;
+      }
+
+      .message-sent {
+        background-color: #dcf8c6;
+        border-top-right-radius: 0;
+        align-self: flex-end;
+        margin-left: auto;
+      }
+
+      .chat-input-container {
+        padding: 10px 15px;
+        background-color: white;
+        border-top: 1px solid #eee;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .chat-input {
+        flex: 1;
+        padding: 10px 15px;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        font-size: 0.9rem;
+      }
+
+      .send-button {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        border: none;
+        cursor: pointer;
+      }
+
+      .active .chat-interface {
+        display: flex;
+      }
+
+      /* Show chat interface when this class is added to body */
+      body.show-chat .conversation-list {
+        display: none;
+      }
+
+      body.show-chat .chat-interface {
+        display: flex;
+      }
+
+      /* Show chat button */
+      .new-chat-button {
+        position: fixed;
+        bottom: 75px;
+        right: 20px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        z-index: 100;
+        font-size: 1.2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-title">Messages</div>
+        <div class="header-actions">
+          <div class="notifications">
+            <i class="far fa-bell"></i>
+          </div>
+          <div class="user-profile">
+            <div class="user-avatar">JD</div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main content area -->
+      <main class="main-content">
+        <!-- Search Bar -->
+        <div class="search-bar">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" class="search-input" placeholder="Search conversations..." />
+        </div>
+
+        <!-- Conversation List -->
+        <div class="conversation-list">
+          <div class="conversation-item" onclick="toggleChat()">
+            <div class="contact-avatar avatar-manager">AM</div>
+            <div class="conversation-details">
+              <div class="conversation-header">
+                <div class="contact-name">Ahmed Malik</div>
+                <div class="message-time">10:24 AM</div>
+              </div>
+              <div class="message-preview">
+                Please visit the new store in Kouba this afternoon
+              </div>
+            </div>
+            <div class="unread-indicator"></div>
+          </div>
+
+          <div class="conversation-item" onclick="toggleChat()">
+            <div class="contact-avatar avatar-team">ST</div>
+            <div class="conversation-details">
+              <div class="conversation-header">
+                <div class="contact-name">Sales Team</div>
+                <div class="message-time">Yesterday</div>
+              </div>
+              <div class="message-preview">
+                Sarah: Don't forget the team meeting tomorrow at 9am
+              </div>
+            </div>
+          </div>
+
+          <div class="conversation-item" onclick="toggleChat()">
+            <div class="contact-avatar avatar-support">TS</div>
+            <div class="conversation-details">
+              <div class="conversation-header">
+                <div class="contact-name">Technical Support</div>
+                <div class="message-time">Mar 4</div>
+              </div>
+              <div class="message-preview">
+                Your issue with the app has been resolved. Please...
+              </div>
+            </div>
+          </div>
+
+          <div class="conversation-item" onclick="toggleChat()">
+            <div class="contact-avatar">KL</div>
+            <div class="conversation-details">
+              <div class="conversation-header">
+                <div class="contact-name">Karim Lasheb</div>
+                <div class="message-time">Mar 3</div>
+              </div>
+              <div class="message-preview">
+                Have you visited the Tech Store in Algiers Center yet?
+              </div>
+            </div>
+          </div>
+
+          <div class="conversation-item" onclick="toggleChat()">
+            <div class="contact-avatar">FZ</div>
+            <div class="conversation-details">
+              <div class="conversation-header">
+                <div class="contact-name">Fatiha Zidane</div>
+                <div class="message-time">Mar 2</div>
+              </div>
+              <div class="message-preview">
+                Thanks for your help with the new prospect registration
+              </div>
+            </div>
+          </div>
+
+          <div class="conversation-item" onclick="toggleChat()">
+            <div class="contact-avatar avatar-manager">RM</div>
+            <div class="conversation-details">
+              <div class="conversation-header">
+                <div class="contact-name">Regional Manager</div>
+                <div class="message-time">Mar 1</div>
+              </div>
+              <div class="message-preview">
+                Great job meeting your targets for February. Keep up...
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Interface (hidden initially) -->
+        <div class="chat-interface">
+          <div class="chat-header">
+            <div class="back-button" onclick="toggleChat()">
+              <i class="fas fa-arrow-left"></i>
+            </div>
+            <div class="chat-avatar avatar-manager">AM</div>
+            <div class="chat-contact-info">
+              <div class="chat-contact-name">Ahmed Malik</div>
+              <div class="chat-contact-status">Last seen today at 10:45 AM</div>
+            </div>
+            <div class="chat-options">
+              <i class="fas fa-ellipsis-v"></i>
+            </div>
+          </div>
+
+          <div class="chat-messages">
+            <div class="message-date">March 4, 2025</div>
+
+            <div class="message-group">
+              <div class="message message-received">
+                Good morning John. I hope you're doing well.
+                <div class="message-time">9:15 AM</div>
+              </div>
+
+              <div class="message message-received">
+                We have a new store opening in Kouba. Could you add it to your visits for today?
+                <div class="message-time">9:16 AM</div>
+              </div>
+
+              <div class="message message-sent">
+                Good morning Ahmed. Yes, I can visit the new store today. What's the address?
+                <div class="message-time">9:20 AM</div>
+              </div>
+
+              <div class="message message-received">
+                It's at 45 Liberty Street, next to the central market. Ask for Mounir when you arrive.
+                <div class="message-time">9:22 AM</div>
+              </div>
+
+              <div class="message message-sent">
+                Got it. I'll head there after my visit to Telecom Plus around 2pm.
+                <div class="message-time">9:25 AM</div>
+              </div>
+
+              <div class="message message-received">
+                Perfect. Please take photos of the store setup and make sure they have all our promotional materials.
+                <div class="message-time">10:24 AM</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-input-container">
+            <input type="text" class="chat-input" placeholder="Type a message..." />
+            <button class="send-button">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- New Chat Button -->
+        <a href="#" class="new-chat-button">
+          <i class="fas fa-edit"></i>
+        </a>
+      </main>
+
+      <!-- Sidebar navigation -->
+      <aside class="sidebar">
+        <ul class="nav-list">
+          <li class="nav-item">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-map-marked-alt"></i>
+            <span>Territory</span>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-route"></i>
+            <span>Routes</span>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-store"></i>
+            <span>POS</span>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-search"></i>
+            <span>Prospecting</span>
+          </li>
+          <li class="nav-item active">
+            <i class="fas fa-comment-alt"></i>
+            <span>Messages</span>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+          </li>
+        </ul>
+      </aside>
+    </div>
+
+    <script>
+      function toggleChat() {
+        document.body.classList.toggle('show-chat');
+      }
+    </script>
+  </body>
+</html>

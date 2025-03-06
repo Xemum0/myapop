@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Territory Map - Mobilis Sales Rep Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <style>
+      :root {
+        --primary-color: #00a651;
+        --secondary-color: #144734;
+        --light-color: #f4f6f9;
+        --dark-color: #343a40;
+        --danger-color: #dc3545;
+        --warning-color: #ffc107;
+        --success-color: #28a745;
+        --info-color: #17a2b8;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background-color: var(--light-color);
+      }
+
+      .container {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-template-rows: 60px 1fr auto;
+        grid-template-areas:
+          "header"
+          "main"
+          "sidebar";
+        height: 100vh;
+      }
+
+      /* Header styles */
+      .header {
+        grid-area: header;
+        background-color: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+      }
+
+      .header-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+      }
+
+      .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+      }
+
+      /* Sidebar styles */
+      .sidebar {
+        grid-area: sidebar;
+        background-color: var(--secondary-color);
+        color: white;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        display: flex;
+        overflow-x: auto;
+      }
+
+      .nav-list {
+        display: flex;
+        padding: 0;
+        width: 100%;
+      }
+
+      .nav-item {
+        flex-direction: column;
+        padding: 10px;
+        font-size: 0.7rem;
+        gap: 5px;
+        flex: 1;
+        text-align: center;
+        justify-content: center;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+      }
+
+      .nav-item i {
+        width: auto;
+        font-size: 1.2rem;
+      }
+
+      .nav-item:hover,
+      .nav-item.active {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+
+      /* Main content styles */
+      .main-content {
+        grid-area: main;
+        padding: 0;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 120px);
+      }
+
+      .card {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        padding: 15px;
+        margin: 10px;
+      }
+
+      .card-header {
+        font-weight: 600;
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .card-body {
+        color: var(--dark-color);
+      }
+
+      .territory-map-container {
+        flex: 1;
+        z-index: 5;
+      }
+
+      #territory-map {
+        height: 100%;
+        width: 100%;
+      }
+
+      .map-controls {
+        position: absolute;
+        top: 70px;
+        right: 10px;
+        background-color: white;
+        border-radius: 4px;
+        padding: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+      }
+
+      .map-control-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin: 5px 0;
+      }
+
+      .map-control-item:hover {
+        background-color: var(--light-color);
+        border-radius: 4px;
+      }
+
+      .territory-analytics {
+        position: absolute;
+        bottom: 70px;
+        left: 0;
+        right: 0;
+        background-color: white;
+        padding: 15px;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
+        z-index: 10;
+      }
+
+      .territory-stat {
+        text-align: center;
+        padding: 10px;
+      }
+
+      .territory-stat-value {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--primary-color);
+      }
+
+      .territory-stat-label {
+        font-size: 0.8rem;
+        color: var(--dark-color);
+      }
+
+      .btn {
+        padding: 8px 12px;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .btn-primary {
+        background-color: var(--primary-color);
+        color: white;
+      }
+
+      .btn-outline {
+        background-color: transparent;
+        border: 1px solid var(--primary-color);
+        color: var(--primary-color);
+      }
+
+      .display-toggle {
+        display: flex;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 25px;
+        position: absolute;
+        top: 70px;
+        left: 10px;
+        z-index: 1000;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .display-toggle-item {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        cursor: pointer;
+      }
+
+      .display-toggle-item.active {
+        background-color: var(--primary-color);
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-title">Territory Map</div>
+        <div class="header-actions">
+          <div class="notifications">
+            <i class="far fa-bell"></i>
+          </div>
+          <div class="user-profile">
+            <div class="user-avatar">JD</div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main content area -->
+      <main class="main-content">
+        <div class="territory-map-container">
+          <div id="territory-map"></div>
+
+          <div class="display-toggle">
+            <div class="display-toggle-item active">Default</div>
+            <div class="display-toggle-item">Heatmap</div>
+          </div>
+
+          <div class="map-controls">
+            <div class="map-control-item">
+              <i class="fas fa-layer-group"></i>
+              <span>Layers</span>
+            </div>
+            <div class="map-control-item">
+              <i class="fas fa-location-arrow"></i>
+              <span>My Location</span>
+            </div>
+            <div class="map-control-item">
+              <i class="fas fa-border-all"></i>
+              <span>Zone Boundaries</span>
+            </div>
+            <div class="map-control-item">
+              <i class="fas fa-store"></i>
+              <span>Points of Sale</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="territory-analytics">
+          <div class="territory-stat">
+            <div class="territory-stat-value">4</div>
+            <div class="territory-stat-label">Assigned Zones</div>
+          </div>
+          <div class="territory-stat">
+            <div class="territory-stat-value">87</div>
+            <div class="territory-stat-label">Total POS</div>
+          </div>
+          <div class="territory-stat">
+            <div class="territory-stat-value">76%</div>
+            <div class="territory-stat-label">Coverage Rate</div>
+          </div>
+          <div class="territory-stat">
+            <div class="territory-stat-value">15</div>
+            <div class="territory-stat-label">Daily Avg Visits</div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Sidebar navigation -->
+      <aside class="sidebar">
+        <ul class="nav-list">
+          <li class="nav-item">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+          </li>
+          <li class="nav-item active">
+            <i class="fas fa-map-marked-alt"></i>
+            <span>Territory</span>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-route"></i>
+            <span>Routes</span>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-store"></i>
+            <span>POS</span>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-search"></i>
+            <span>Prospecting</span>
+          </li>
+        </ul>
+      </aside>
+    </div>
+
+    <script>
+      // Initialize map
+      const map = L.map("territory-map").setView([36.7538, 3.0588], 12); // Default to Algiers
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors",
+      }).addTo(map);
+
+      // Sample zone data (polygons for demonstration)
+      const zoneData = [
+        {
+          id: 1,
+          name: "Zone A - Central",
+          color: "#28a745",
+          coordinates: [
+            [36.765, 3.055],
+            [36.77, 3.07],
+            [36.76, 3.08],
+            [36.75, 3.065],
+          ],
+        },
+        {
+          id: 2,
+          name: "Zone B - North",
+          color: "#007bff",
+          coordinates: [
+            [36.775, 3.05],
+            [36.79, 3.06],
+            [36.785, 3.08],
+            [36.77, 3.07],
+          ],
+        },
+        {
+          id: 3,
+          name: "Zone C - East",
+          color: "#fd7e14",
+          coordinates: [
+            [36.76, 3.08],
+            [36.785, 3.08],
+            [36.78, 3.1],
+            [36.755, 3.095],
+          ],
+        },
+        {
+          id: 4,
+          name: "Zone D - West",
+          color: "#6f42c1",
+          coordinates: [
+            [36.765, 3.055],
+            [36.75, 3.065],
+            [36.735, 3.05],
+            [36.745, 3.03],
+          ],
+        },
+      ];
+
+      // Sample POS data
+      const posData = [
+        {
+          id: 1,
+          name: "Tech Store Algiers",
+          lat: 36.7538,
+          lng: 3.0588,
+          status: "active",
+          category: "Electronics",
+          zone: 1,
+        },
+        {
+          id: 2,
+          name: "Mobile Shop Central",
+          lat: 36.7613,
+          lng: 3.0583,
+          status: "active",
+          category: "Mobile",
+          zone: 1,
+        },
+        {
+          id: 3,
+          name: "Telecom Plus",
+          lat: 36.748,
+          lng: 3.052,
+          status: "active",
+          category: "Telecom",
+          zone: 4,
+        },
+        {
+          id: 4,
+          name: "Smart Device Center",
+          lat: 36.762,
+          lng: 3.038,
+          status: "inactive",
+          category: "Electronics",
+          zone: 4,
+        },
+        {
+          id: 5,
+          name: "Connect Market",
+          lat: 36.739,
+          lng: 3.072,
+          status: "active",
+          category: "Mixed",
+          zone: 4,
+        },
+        {
+          id: 6,
+          name: "North Phone Shop",
+          lat: 36.782,
+          lng: 3.065,
+          status: "active",
+          category: "Mobile",
+          zone: 2,
+        },
+        {
+          id: 7,
+          name: "East Side Electronics",
+          lat: 36.77,
+          lng: 3.09,
+          status: "active",
+          category: "Electronics",
+          zone: 3,
+        },
+      ];
+
+      // Draw zone polygons
+      zoneData.forEach((zone) => {
+        const polygon = L.polygon(zone.coordinates, {
+          color: zone.color,
+          fillOpacity: 0.3,
+          weight: 2,
+        }).addTo(map);
+
+        polygon.bindPopup(`
+          <strong>${zone.name}</strong><br>
+          ${posData.filter((pos) => pos.zone === zone.id).length} Points of Sale
+        `);
+      });
+
+      // Add markers for each POS
+      posData.forEach((pos) => {
+        const markerColor = pos.status === "active" ? "#28a745" : "#6c757d";
+
+        const marker = L.circleMarker([pos.lat, pos.lng], {
+          radius: 6,
+          fillColor: markerColor,
+          color: "#fff",
+          weight: 2,
+          opacity: 1,
+          fillOpacity: 0.8,
+        }).addTo(map);
+
+        marker.bindPopup(`
+          <strong>${pos.name}</strong><br>
+          Category: ${pos.category}<br>
+          Status: ${pos.status === "active" ? "Active" : "Inactive"}<br>
+          Zone: ${zoneData.find((z) => z.id === pos.zone).name}
+        `);
+      });
+
+      // Current location
+      L.circleMarker([36.762, 3.038], {
+        radius: 8,
+        fillColor: "#007bff",
+        color: "#fff",
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 0.8,
+      })
+        .addTo(map)
+        .bindPopup("Your current location");
+    </script>
+  </body>
+</html>

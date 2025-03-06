@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Prospecting - Mobilis Sales Rep Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <style>
+      :root {
+        --primary-color: #00a651;
+        --secondary-color: #144734;
+        --light-color: #f4f6f9;
+        --dark-color: #343a40;
+        --danger-color: #dc3545;
+        --warning-color: #ffc107;
+        --success-color: #28a745;
+        --info-color: #17a2b8;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background-color: var(--light-color);
+      }
+
+      .container {
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-template-rows: 60px 1fr auto;
+        grid-template-areas:
+          "header"
+          "main"
+          "sidebar";
+        height: 100vh;
+      }
+
+      /* Header styles */
+      .header {
+        grid-area: header;
+        background-color: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+      }
+
+      .header-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+      }
+
+      .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+      }
+
+      /* Sidebar styles */
+      .sidebar {
+        grid-area: sidebar;
+        background-color: var(--secondary-color);
+        color: white;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        display: flex;
+        overflow-x: auto;
+      }
+
+      .nav-list {
+        display: flex;
+        padding: 0;
+        width: 100%;
+      }
+
+      .nav-item {
+        flex-direction: column;
+        padding: 10px;
+        font-size: 0.7rem;
+        gap: 5px;
+        flex: 1;
+        text-align: center;
+        justify-content: center;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+      }
+
+      .nav-item i {
+        width: auto;
+        font-size: 1.2rem;
+      }
+
+      .nav-item:hover,
+      .nav-item.active {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+
+      /* Main content styles */
+      .main-content {
+        grid-area: main;
+        padding: 15px;
+        overflow-y: auto;
+        height: calc(100vh - 120px);
+      }
+
+      .metrics-cards {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .metric-card {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        padding: 15px;
+        text-align: center;
+      }
+
+      .metric-value {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 5px;
+      }
+
+      .metric-label {
+        font-size: 0.8rem;
+        color: #666;
+      }
+
+      .metric-target {
+        font-size: 0.75rem;
+        color: #888;
+        margin-top: 5px;
+      }
+
+      .progress-container {
+        height: 4px;
+        background-color: #eee;
+        border-radius: 2px;
+        margin-top: 8px;
+        overflow: hidden;
+      }
+
+      .progress-bar {
+        height: 100%;
+        background-color: var(--primary-color);
+      }
+
+      .card {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        padding: 15px;
+        margin-bottom: 15px;
+      }
+
+      .card-header {
+        font-weight: 600;
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .tab-container {
+        display: flex;
+        border-bottom: 1px solid #eee;
+        margin-bottom: 15px;
+      }
+
+      .tab {
+        padding: 10px 15px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        position: relative;
+      }
+
+      .tab.active {
+        color: var(--primary-color);
+        font-weight: 500;
+      }
+
+      .tab.active::after {
+        content: "";
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background-color: var(--primary-color);
+      }
+
+      .form-group {
+        margin-bottom: 12px;
+      }
+
+      .form-label {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 0.9rem;
+        color: #555;
+      }
+
+      .form-input,
+      .form-select,
+      .form-textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.9rem;
+      }
+
+      .form-textarea {
+        min-height: 80px;
+        resize: vertical;
+      }
+
+      .prospect-item {
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+      }
+
+      .prospect-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 5px;
+      }
+
+      .prospect-name {
+        font-weight: 500;
+      }
+
+      .prospect-date {
+        font-size: 0.75rem;
+        color: #666;
+      }
+
+      .prospect-details {
+        font-size: 0.85rem;
+        color: #555;
+      }
+
+      .prospect-status {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        margin-top: 5px;
+      }
+
+      .status-new {
+        background-color: rgba(23, 162, 184, 0.1);
+        color: var(--info-color);
+      }
+
+      .status-accepted {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: var(--success-color);
+      }
+
+      .status-pending {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: var(--warning-color);
+      }
+
+      .prospect-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+      }
+
+      .btn {
+        padding: 8px 12px;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .btn-primary {
+        background-color: var(--primary-color);
+        color: white;
+      }
+
+      .btn-outline {
+        background-color: transparent;
+        border: 1px solid var(--primary-color);
+        color: var(--primary-color);
+      }
+
+      .btn-secondary {
+        background-color: var(--info-color);
+        color: white;
+      }
+
+      .btn-small {
+        padding: 5px 8px;
+        font-size: 0.8rem;
+      }
+
+      .btn-block {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .location-capture {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        background-color: #f8f9fa;
+        padding: 10px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+      }
+
+      .location-text {
+        flex: 1;
+        font-size: 0.85rem;
+      }
+
+      .location-coords {
+        font-weight: 500;
+        font-size: 0.8rem;
+      }
+
+      .quick-filters {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 5px;
+        margin-bottom: 10px;
+      }
+
+      .filter-chip {
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        background-color: #f1f1f1;
+        color: #555;
+      }
+
+      .filter-chip.active {
+        background-color: var(--primary-color);
+        color: white;
+      }
+
+      .camera-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        background-color: #f8f9fa;
+        border: 1px dashed #ccc;
+        padding: 12px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        cursor: pointer;
+      }
+
+      .camera-icon {
+        color: #666;
+        font-size: 1.2rem;
+      }
+
+      .camera-text {
+        font-size: 0.85rem;
+        color: #555;
+      }
+
+      .action-bar {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .action-bar .btn {
+        flex: 1;
+      }
+
+      .floating-button {
+        position: fixed;
+        bottom: 75px;
+        right: 20px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        font-size: 1.5rem;
+        z-index: 100;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-title">Prospecting</div>
+        <div class="header-actions">
+          <div class="notifications">
+            <i class="far fa-bell"></i>
+          </div>
+          <div class="user-profile">
+            <div class="user-avatar">JD</div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main content area -->
+      <main class="main-content">
+        <div class="metrics-cards">
+          <div class="metric-card">
+            <div class="metric-value">12</div>
+            <div class="metric-label">Prospects This Month</div>
+            <div class="metric-target">Target: 15</div>
+            <div class="progress-container">
+              <div class="progress-bar" style="width: 80%"></div>
+            </div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">8</div>
+            <div class="metric-label">Prospects Accepted</div>
+            <div class="metric-target">Success Rate: 66%</div>
+            <div class="progress-container">
+              <div class="progress-bar" style="width: 66%"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span>New Prospect</span>
+            <button class="btn btn-small btn-outline">
+              <i class="fas fa-minus"></i> Collapse
+            </button>
+          </div>
+          <div class="tab-container">
+            <div class="tab active">Basic Info</div>
+            <div class="tab">Business Details</div>
+            <div class="tab">Location</div>
+          </div>
+
+          <!-- Basic Information Form -->
+          <div class="form-group">
+            <label class="form-label" for="prospect-name"
+              >Point of Sale Name *</label
+            >
+            <input
+              type="text"
+              id="prospect-name"
+              class="form-input"
+              placeholder="Enter POS name"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="contact-person"
+              >Contact Person</label
+            >
+            <input
+              type="text"
+              id="contact-person"
+              class="form-input"
+              placeholder="Full name"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="contact-phone">Phone Number *</label>
+            <input
+              type="tel"
+              id="contact-phone"
+              class="form-input"
+              placeholder="+213 XXX XXX XXX"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="prospect-address">Address *</label>
+            <input
+              type="text"
+              id="prospect-address"
+              class="form-input"
+              placeholder="Street address"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="prospect-commune">Commune *</label>
+            <select id="prospect-commune" class="form-select">
+              <option value="">Select Commune</option>
+              <option value="algiers-center">Algiers Center</option>
+              <option value="bab-ezzouar">Bab Ezzouar</option>
+              <option value="hydra">Hydra</option>
+              <option value="kouba">Kouba</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div class="location-capture">
+            <div class="location-text">
+              <strong>Current Location</strong><br />
+              <span class="location-coords">36.7538° N, 3.0588° E</span>
+            </div>
+            <button class="btn btn-outline btn-small">
+              <i class="fas fa-crosshairs"></i> Update
+            </button>
+          </div>
+
+          <div class="camera-button">
+            <i class="fas fa-camera camera-icon"></i>
+            <span class="camera-text">Take photo of the POS</span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="prospect-category"
+              >POS Category *</label
+            >
+            <select id="prospect-category" class="form-select">
+              <option value="">Select Category</option>
+              <option value="electronics">Electronics</option>
+              <option value="mobile">Mobile</option>
+              <option value="telecom">Telecom</option>
+              <option value="mixed">Mixed</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="prospect-notes">Notes</label>
+            <textarea
+              id="prospect-notes"
+              class="form-textarea"
+              placeholder="Additional information about this prospect..."
+            ></textarea>
+          </div>
+
+          <div class="action-bar">
+            <button class="btn btn-outline">
+              <i class="fas fa-save"></i> Save Draft
+            </button>
+            <button class="btn btn-primary">
+              <i class="fas fa-plus-circle"></i> Add Prospect
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span>Recent Prospects</span>
+          </div>
+
+          <div class="quick-filters">
+            <div class="filter-chip active">All</div>
+            <div class="filter-chip">New</div>
+            <div class="filter-chip">Pending</div>
+            <div class="filter-chip">Accepted</div>
+            <div class="filter-chip">Rejected</div>
+          </div>
+
+          <div class="prospect-item">
+            <div class="prospect-header">
+              <div class="prospect-name">Digital World Shop</div>
+              <div class="prospect-date">Today, 11:23 AM</div>
+            </div>
+            <div class="prospect-details">
+              <div>Bab Ezzouar - Electronics</div>
+              <div>+213 555 987 654</div>
+            </div>
+            <div class="prospect-status status-new">New</div>
+            <div class="prospect-actions">
+              <button class="btn btn-outline btn-small">
+                <i class="fas fa-info-circle"></i> Details
+              </button>
+              <button class="btn btn-primary btn-small">
+                <i class="fas fa-check-circle"></i> Follow Up
+              </button>
+            </div>
+          </div>
+
+          <div class="prospect-item">
+            <div class="prospect-header">
+              <div class="prospect-name">MegaPhone Store</div>
+              <div class="prospect-date">Yesterday</div>
+            </div>
+            <div class="prospect-details">
+              <div>Kouba - Mobile</div>
+              <div>+213 555 123 789</div>
+            </div>
+            <div class="prospect-status status-accepted">Accepted</div>
+            <div class="prospect-actions">
+              <button class="btn btn-outline btn-small">
+                <i class="fas fa-info-circle"></i> Details
+              </button>
+            </div>
+          </div>
+
+          <div class="prospect-item">
+            <div class="prospect-header">
+              <div class="prospect-name">Tech Wave</div>
+              <div class="prospect-date">March 3, 2025</div>
+            </div>
+            <div class="prospect-details">
+              <div>Hydra - Mixed</div>
+              <div>+213 555 456 321</div>
+            </div>
+            <div class="prospect-status status-pending">Pending</div>
+            <div class="prospect-actions">
+              <button class="btn btn-outline btn-small">
+                <i class="fas fa-info-circle"></i> Details
+              </button>
+              <button class="btn btn-primary btn-small">
+                <i class="fas fa-phone-alt"></i> Contact
+              </button>
+            </div>
+          </div>
+
+          <div class="prospect-item">
+            <div class="prospect-header">
+              <div class="prospect-name">Connect Mobile</div>
+              <div class="prospect-date">March 2, 2025</div>
+            </div>
+            <div class="prospect-details">
+              <div>Algiers Center - Mobile</div>
+              <div>+213 555 789 456</div>
+            </div>
+            <div class="prospect-status status-pending">Pending</div>
+            <div class="prospect-actions">
+              <button class="btn btn-outline btn-small">
+                <i class="fas fa-info-circle"></i> Details
+              </button>
+              <button class="btn btn-primary btn-small">
+                <i class="fas fa-phone-alt"></i> Contact
+              </button>
+            </div>
+          </div>
+
+          <div class="prospect-item">
+            <div class="prospect-header">
+              <div class="prospect-name">Telecom Express</div>
+              <div class="prospect-date">March 1, 2025</div>
+            </div>
+            <div class="prospect-details">
+              <div>Bab Ezzouar - Telecom</div>
+              <div>+213 555 654 321</div>
+            </div>
+            <div class="prospect-status status-accepted">Accepted</div>
+            <div class="prospect-actions">
+              <button class="btn btn-outline btn-small">
+                <i class="fas fa-info-circle"></i> Details
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <a href="#" class="floating-button">
+          <i class="fas fa-plus"></i>
+        </a>
+      </main>
+
+      <!-- Sidebar navigation -->
+      <aside class="sidebar">
+        <ul class="nav-list">
+          <li class="nav-item">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Dashboard</span>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-map-marked-alt"></i>
+            <span>Territory</span>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-route"></i>
+            <span>Routes</span>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-store"></i>
+            <span>POS</span>
+          </li>
+          <li class="nav-item active">
+            <i class="fas fa-search"></i>
+            <span>Prospecting</span>
+          </li>
+        </ul>
+      </aside>
+    </div>
+  </body>
+</html>
