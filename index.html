@@ -3,9 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Prospecting - Mobilis Sales Rep Dashboard</title>
+    <title>Messages - Mobilis Sales Rep Dashboard</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
     <style>
       :root {
         --primary-color: #00a651;
@@ -127,294 +126,302 @@
       /* Main content styles */
       .main-content {
         grid-area: main;
-        padding: 15px;
-        overflow-y: auto;
         height: calc(100vh - 120px);
+        display: flex;
+        flex-direction: column;
       }
 
-      .metrics-cards {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-        margin-bottom: 15px;
-      }
-
-      .metric-card {
+      .search-bar {
         background-color: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        padding: 15px;
-        text-align: center;
+        padding: 12px 15px;
+        position: relative;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       }
 
-      .metric-value {
-        font-size: 1.5rem;
+      .search-input {
+        width: 100%;
+        padding: 8px 12px 8px 35px;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        font-size: 0.9rem;
+      }
+
+      .search-icon {
+        position: absolute;
+        left: 25px;
+        top: 21px;
+        color: #999;
+        font-size: 0.9rem;
+      }
+
+      .conversation-list {
+        flex: 1;
+        overflow-y: auto;
+        background-color: white;
+      }
+
+      .conversation-item {
+        display: flex;
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        gap: 12px;
+        cursor: pointer;
+        position: relative;
+      }
+
+      .conversation-item:hover {
+        background-color: #f9f9f9;
+      }
+
+      .conversation-item.active {
+        background-color: #f0f7f4;
+      }
+
+      .contact-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: #eee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         font-weight: 600;
-        color: var(--primary-color);
+        color: var(--dark-color);
+        font-size: 1.2rem;
+      }
+
+      .avatar-manager {
+        background-color: #e3f2fd;
+        color: #0d47a1;
+      }
+
+      .avatar-team {
+        background-color: #e8f5e9;
+        color: #1b5e20;
+      }
+
+      .avatar-support {
+        background-color: #fff3e0;
+        color: #e65100;
+      }
+
+      .conversation-details {
+        flex: 1;
+      }
+
+      .conversation-header {
+        display: flex;
+        justify-content: space-between;
         margin-bottom: 5px;
       }
 
-      .metric-label {
-        font-size: 0.8rem;
+      .contact-name {
+        font-weight: 500;
+      }
+
+      .message-time {
+        font-size: 0.75rem;
         color: #666;
       }
 
-      .metric-target {
-        font-size: 0.75rem;
-        color: #888;
-        margin-top: 5px;
-      }
-
-      .progress-container {
-        height: 4px;
-        background-color: #eee;
-        border-radius: 2px;
-        margin-top: 8px;
+      .message-preview {
+        font-size: 0.85rem;
+        color: #666;
+        white-space: nowrap;
         overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 230px;
       }
 
-      .progress-bar {
-        height: 100%;
+      .unread-indicator {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
         background-color: var(--primary-color);
       }
 
-      .card {
+      /* Chat Interface */
+      .chat-interface {
+        display: none; /* Hidden initially */
+        flex-direction: column;
+        height: 100%;
+        position: absolute;
+        top: 60px;
+        left: 0;
+        right: 0;
+        bottom: 60px;
         background-color: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        padding: 15px;
-        margin-bottom: 15px;
+        z-index: 5;
       }
 
-      .card-header {
-        font-weight: 600;
-        margin-bottom: 15px;
+      .chat-header {
         display: flex;
-        justify-content: space-between;
         align-items: center;
+        padding: 12px 15px;
+        background-color: white;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       }
 
-      .tab-container {
+      .back-button {
+        margin-right: 15px;
+        font-size: 1.2rem;
+        color: #555;
+        cursor: pointer;
+      }
+
+      .chat-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-right: 12px;
+        background-color: #eee;
         display: flex;
-        border-bottom: 1px solid #eee;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        color: var(--dark-color);
+        font-size: 1rem;
+      }
+
+      .chat-contact-info {
+        flex: 1;
+      }
+
+      .chat-contact-name {
+        font-weight: 500;
+      }
+
+      .chat-contact-status {
+        font-size: 0.75rem;
+        color: #666;
+      }
+
+      .chat-options {
+        font-size: 1.2rem;
+        color: #555;
+        cursor: pointer;
+      }
+
+      .chat-messages {
+        flex: 1;
+        padding: 15px;
+        overflow-y: auto;
+        background-color: #f5f5f5;
+      }
+
+      .message-group {
         margin-bottom: 15px;
       }
 
-      .tab {
-        padding: 10px 15px;
-        cursor: pointer;
+      .message-date {
+        text-align: center;
+        font-size: 0.75rem;
+        color: #666;
+        margin: 20px 0 15px;
+        position: relative;
+      }
+
+      .message-date::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        width: 40%;
+        height: 1px;
+        background-color: #ddd;
+      }
+
+      .message-date::after {
+        content: "";
+        position: absolute;
+        right: 0;
+        top: 50%;
+        width: 40%;
+        height: 1px;
+        background-color: #ddd;
+      }
+
+      .message {
+        max-width: 75%;
+        margin-bottom: 10px;
+        padding: 10px 12px;
+        border-radius: 10px;
         font-size: 0.9rem;
         position: relative;
       }
 
-      .tab.active {
-        color: var(--primary-color);
-        font-weight: 500;
-      }
-
-      .tab.active::after {
-        content: "";
-        position: absolute;
-        bottom: -1px;
-        left: 0;
-        width: 100%;
-        height: 2px;
-        background-color: var(--primary-color);
-      }
-
-      .form-group {
-        margin-bottom: 12px;
-      }
-
-      .form-label {
-        display: block;
-        margin-bottom: 5px;
-        font-size: 0.9rem;
-        color: #555;
-      }
-
-      .form-input,
-      .form-select,
-      .form-textarea {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 0.9rem;
-      }
-
-      .form-textarea {
-        min-height: 80px;
-        resize: vertical;
-      }
-
-      .prospect-item {
-        padding: 12px;
-        border-bottom: 1px solid #eee;
-      }
-
-      .prospect-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 5px;
-      }
-
-      .prospect-name {
-        font-weight: 500;
-      }
-
-      .prospect-date {
-        font-size: 0.75rem;
-        color: #666;
-      }
-
-      .prospect-details {
-        font-size: 0.85rem;
-        color: #555;
-      }
-
-      .prospect-status {
-        display: inline-block;
-        padding: 3px 8px;
-        border-radius: 12px;
+      .message-time {
         font-size: 0.7rem;
-        margin-top: 5px;
+        color: #999;
+        margin-top: 3px;
+        text-align: right;
       }
 
-      .status-new {
-        background-color: rgba(23, 162, 184, 0.1);
-        color: var(--info-color);
+      .message-received {
+        background-color: white;
+        border-top-left-radius: 0;
+        align-self: flex-start;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        margin-right: auto;
       }
 
-      .status-accepted {
-        background-color: rgba(40, 167, 69, 0.1);
-        color: var(--success-color);
+      .message-sent {
+        background-color: #dcf8c6;
+        border-top-right-radius: 0;
+        align-self: flex-end;
+        margin-left: auto;
       }
 
-      .status-pending {
-        background-color: rgba(255, 193, 7, 0.1);
-        color: var(--warning-color);
-      }
-
-      .prospect-actions {
+      .chat-input-container {
+        padding: 10px 15px;
+        background-color: white;
+        border-top: 1px solid #eee;
         display: flex;
-        gap: 8px;
-        margin-top: 8px;
+        align-items: center;
+        gap: 10px;
       }
 
-      .btn {
-        padding: 8px 12px;
-        border-radius: 4px;
+      .chat-input {
+        flex: 1;
+        padding: 10px 15px;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        font-size: 0.9rem;
+      }
+
+      .send-button {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
         border: none;
         cursor: pointer;
-        font-size: 0.9rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
       }
 
-      .btn-primary {
-        background-color: var(--primary-color);
-        color: white;
-      }
-
-      .btn-outline {
-        background-color: transparent;
-        border: 1px solid var(--primary-color);
-        color: var(--primary-color);
-      }
-
-      .btn-secondary {
-        background-color: var(--info-color);
-        color: white;
-      }
-
-      .btn-small {
-        padding: 5px 8px;
-        font-size: 0.8rem;
-      }
-
-      .btn-block {
-        width: 100%;
-        justify-content: center;
-      }
-
-      .location-capture {
+      .active .chat-interface {
         display: flex;
-        gap: 10px;
-        align-items: center;
-        background-color: #f8f9fa;
-        padding: 10px;
-        border-radius: 4px;
-        margin-bottom: 15px;
       }
 
-      .location-text {
-        flex: 1;
-        font-size: 0.85rem;
+      /* Show chat interface when this class is added to body */
+      body.show-chat .conversation-list {
+        display: none;
       }
 
-      .location-coords {
-        font-weight: 500;
-        font-size: 0.8rem;
-      }
-
-      .quick-filters {
+      body.show-chat .chat-interface {
         display: flex;
-        gap: 8px;
-        overflow-x: auto;
-        padding-bottom: 5px;
-        margin-bottom: 10px;
       }
 
-      .filter-chip {
-        padding: 5px 10px;
-        border-radius: 15px;
-        font-size: 0.75rem;
-        white-space: nowrap;
-        background-color: #f1f1f1;
-        color: #555;
-      }
-
-      .filter-chip.active {
-        background-color: var(--primary-color);
-        color: white;
-      }
-
-      .camera-button {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        background-color: #f8f9fa;
-        border: 1px dashed #ccc;
-        padding: 12px;
-        border-radius: 4px;
-        margin-bottom: 15px;
-        cursor: pointer;
-      }
-
-      .camera-icon {
-        color: #666;
-        font-size: 1.2rem;
-      }
-
-      .camera-text {
-        font-size: 0.85rem;
-        color: #555;
-      }
-
-      .action-bar {
-        display: flex;
-        gap: 10px;
-        margin-top: 10px;
-      }
-
-      .action-bar .btn {
-        flex: 1;
-      }
-
-      .floating-button {
+      /* Show chat button */
+      .new-chat-button {
         position: fixed;
         bottom: 75px;
         right: 20px;
@@ -426,9 +433,9 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-        font-size: 1.5rem;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
         z-index: 100;
+        font-size: 1.2rem;
       }
     </style>
   </head>
@@ -436,7 +443,7 @@
     <div class="container">
       <!-- Header -->
       <header class="header">
-        <div class="header-title">Prospecting</div>
+        <div class="header-title">Messages</div>
         <div class="header-actions">
           <div class="notifications">
             <i class="far fa-bell"></i>
@@ -449,253 +456,170 @@
 
       <!-- Main content area -->
       <main class="main-content">
-        <div class="metrics-cards">
-          <div class="metric-card">
-            <div class="metric-value">12</div>
-            <div class="metric-label">Prospects This Month</div>
-            <div class="metric-target">Target: 15</div>
-            <div class="progress-container">
-              <div class="progress-bar" style="width: 80%"></div>
+        <!-- Search Bar -->
+        <div class="search-bar">
+          <i class="fas fa-search search-icon"></i>
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search conversations..."
+          />
+        </div>
+
+        <!-- Conversation List -->
+        <div class="conversation-list">
+          <div class="conversation-item" onclick="toggleChat()">
+            <div class="contact-avatar avatar-manager">AM</div>
+            <div class="conversation-details">
+              <div class="conversation-header">
+                <div class="contact-name">Ahmed Malik</div>
+                <div class="message-time">10:24 AM</div>
+              </div>
+              <div class="message-preview">
+                Please visit the new store in Kouba this afternoon
+              </div>
+            </div>
+            <div class="unread-indicator"></div>
+          </div>
+
+          <div class="conversation-item" onclick="toggleChat()">
+            <div class="contact-avatar avatar-team">ST</div>
+            <div class="conversation-details">
+              <div class="conversation-header">
+                <div class="contact-name">Sales Team</div>
+                <div class="message-time">Yesterday</div>
+              </div>
+              <div class="message-preview">
+                Sarah: Don't forget the team meeting tomorrow at 9am
+              </div>
             </div>
           </div>
-          <div class="metric-card">
-            <div class="metric-value">8</div>
-            <div class="metric-label">Prospects Accepted</div>
-            <div class="metric-target">Success Rate: 66%</div>
-            <div class="progress-container">
-              <div class="progress-bar" style="width: 66%"></div>
+
+          <div class="conversation-item" onclick="toggleChat()">
+            <div class="contact-avatar avatar-support">TS</div>
+            <div class="conversation-details">
+              <div class="conversation-header">
+                <div class="contact-name">Technical Support</div>
+                <div class="message-time">Mar 4</div>
+              </div>
+              <div class="message-preview">
+                Your issue with the app has been resolved. Please...
+              </div>
+            </div>
+          </div>
+
+          <div class="conversation-item" onclick="toggleChat()">
+            <div class="contact-avatar">KL</div>
+            <div class="conversation-details">
+              <div class="conversation-header">
+                <div class="contact-name">Karim Lasheb</div>
+                <div class="message-time">Mar 3</div>
+              </div>
+              <div class="message-preview">
+                Have you visited the Tech Store in Algiers Center yet?
+              </div>
+            </div>
+          </div>
+
+          <div class="conversation-item" onclick="toggleChat()">
+            <div class="contact-avatar">FZ</div>
+            <div class="conversation-details">
+              <div class="conversation-header">
+                <div class="contact-name">Fatiha Zidane</div>
+                <div class="message-time">Mar 2</div>
+              </div>
+              <div class="message-preview">
+                Thanks for your help with the new prospect registration
+              </div>
+            </div>
+          </div>
+
+          <div class="conversation-item" onclick="toggleChat()">
+            <div class="contact-avatar avatar-manager">RM</div>
+            <div class="conversation-details">
+              <div class="conversation-header">
+                <div class="contact-name">Regional Manager</div>
+                <div class="message-time">Mar 1</div>
+              </div>
+              <div class="message-preview">
+                Great job meeting your targets for February. Keep up...
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="card">
-          <div class="card-header">
-            <span>New Prospect</span>
-            <button class="btn btn-small btn-outline">
-              <i class="fas fa-minus"></i> Collapse
-            </button>
-          </div>
-          <div class="tab-container">
-            <div class="tab active">Basic Info</div>
-            <div class="tab">Business Details</div>
-            <div class="tab">Location</div>
-          </div>
-
-          <!-- Basic Information Form -->
-          <div class="form-group">
-            <label class="form-label" for="prospect-name"
-              >Point of Sale Name *</label
-            >
-            <input
-              type="text"
-              id="prospect-name"
-              class="form-input"
-              placeholder="Enter POS name"
-            />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="contact-person"
-              >Contact Person</label
-            >
-            <input
-              type="text"
-              id="contact-person"
-              class="form-input"
-              placeholder="Full name"
-            />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="contact-phone">Phone Number *</label>
-            <input
-              type="tel"
-              id="contact-phone"
-              class="form-input"
-              placeholder="+213 XXX XXX XXX"
-            />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="prospect-address">Address *</label>
-            <input
-              type="text"
-              id="prospect-address"
-              class="form-input"
-              placeholder="Street address"
-            />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="prospect-commune">Commune *</label>
-            <select id="prospect-commune" class="form-select">
-              <option value="">Select Commune</option>
-              <option value="algiers-center">Algiers Center</option>
-              <option value="bab-ezzouar">Bab Ezzouar</option>
-              <option value="hydra">Hydra</option>
-              <option value="kouba">Kouba</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-
-          <div class="location-capture">
-            <div class="location-text">
-              <strong>Current Location</strong><br />
-              <span class="location-coords">36.7538° N, 3.0588° E</span>
+        <!-- Chat Interface (hidden initially) -->
+        <div class="chat-interface">
+          <div class="chat-header">
+            <div class="back-button" onclick="toggleChat()">
+              <i class="fas fa-arrow-left"></i>
             </div>
-            <button class="btn btn-outline btn-small">
-              <i class="fas fa-crosshairs"></i> Update
-            </button>
+            <div class="chat-avatar avatar-manager">AM</div>
+            <div class="chat-contact-info">
+              <div class="chat-contact-name">Ahmed Malik</div>
+              <div class="chat-contact-status">Last seen today at 10:45 AM</div>
+            </div>
+            <div class="chat-options">
+              <i class="fas fa-ellipsis-v"></i>
+            </div>
           </div>
 
-          <div class="camera-button">
-            <i class="fas fa-camera camera-icon"></i>
-            <span class="camera-text">Take photo of the POS</span>
+          <div class="chat-messages">
+            <div class="message-date">March 4, 2025</div>
+
+            <div class="message-group">
+              <div class="message message-received">
+                Good morning John. I hope you're doing well.
+                <div class="message-time">9:15 AM</div>
+              </div>
+
+              <div class="message message-received">
+                We have a new store opening in Kouba. Could you add it to your
+                visits for today?
+                <div class="message-time">9:16 AM</div>
+              </div>
+
+              <div class="message message-sent">
+                Good morning Ahmed. Yes, I can visit the new store today. What's
+                the address?
+                <div class="message-time">9:20 AM</div>
+              </div>
+
+              <div class="message message-received">
+                It's at 45 Liberty Street, next to the central market. Ask for
+                Mounir when you arrive.
+                <div class="message-time">9:22 AM</div>
+              </div>
+
+              <div class="message message-sent">
+                Got it. I'll head there after my visit to Telecom Plus around
+                2pm.
+                <div class="message-time">9:25 AM</div>
+              </div>
+
+              <div class="message message-received">
+                Perfect. Please take photos of the store setup and make sure
+                they have all our promotional materials.
+                <div class="message-time">10:24 AM</div>
+              </div>
+            </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label" for="prospect-category"
-              >POS Category *</label
-            >
-            <select id="prospect-category" class="form-select">
-              <option value="">Select Category</option>
-              <option value="electronics">Electronics</option>
-              <option value="mobile">Mobile</option>
-              <option value="telecom">Telecom</option>
-              <option value="mixed">Mixed</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="prospect-notes">Notes</label>
-            <textarea
-              id="prospect-notes"
-              class="form-textarea"
-              placeholder="Additional information about this prospect..."
-            ></textarea>
-          </div>
-
-          <div class="action-bar">
-            <button class="btn btn-outline">
-              <i class="fas fa-save"></i> Save Draft
-            </button>
-            <button class="btn btn-primary">
-              <i class="fas fa-plus-circle"></i> Add Prospect
+          <div class="chat-input-container">
+            <input
+              type="text"
+              class="chat-input"
+              placeholder="Type a message..."
+            />
+            <button class="send-button">
+              <i class="fas fa-paper-plane"></i>
             </button>
           </div>
         </div>
 
-        <div class="card">
-          <div class="card-header">
-            <span>Recent Prospects</span>
-          </div>
-
-          <div class="quick-filters">
-            <div class="filter-chip active">All</div>
-            <div class="filter-chip">New</div>
-            <div class="filter-chip">Pending</div>
-            <div class="filter-chip">Accepted</div>
-            <div class="filter-chip">Rejected</div>
-          </div>
-
-          <div class="prospect-item">
-            <div class="prospect-header">
-              <div class="prospect-name">Digital World Shop</div>
-              <div class="prospect-date">Today, 11:23 AM</div>
-            </div>
-            <div class="prospect-details">
-              <div>Bab Ezzouar - Electronics</div>
-              <div>+213 555 987 654</div>
-            </div>
-            <div class="prospect-status status-new">New</div>
-            <div class="prospect-actions">
-              <button class="btn btn-outline btn-small">
-                <i class="fas fa-info-circle"></i> Details
-              </button>
-              <button class="btn btn-primary btn-small">
-                <i class="fas fa-check-circle"></i> Follow Up
-              </button>
-            </div>
-          </div>
-
-          <div class="prospect-item">
-            <div class="prospect-header">
-              <div class="prospect-name">MegaPhone Store</div>
-              <div class="prospect-date">Yesterday</div>
-            </div>
-            <div class="prospect-details">
-              <div>Kouba - Mobile</div>
-              <div>+213 555 123 789</div>
-            </div>
-            <div class="prospect-status status-accepted">Accepted</div>
-            <div class="prospect-actions">
-              <button class="btn btn-outline btn-small">
-                <i class="fas fa-info-circle"></i> Details
-              </button>
-            </div>
-          </div>
-
-          <div class="prospect-item">
-            <div class="prospect-header">
-              <div class="prospect-name">Tech Wave</div>
-              <div class="prospect-date">March 3, 2025</div>
-            </div>
-            <div class="prospect-details">
-              <div>Hydra - Mixed</div>
-              <div>+213 555 456 321</div>
-            </div>
-            <div class="prospect-status status-pending">Pending</div>
-            <div class="prospect-actions">
-              <button class="btn btn-outline btn-small">
-                <i class="fas fa-info-circle"></i> Details
-              </button>
-              <button class="btn btn-primary btn-small">
-                <i class="fas fa-phone-alt"></i> Contact
-              </button>
-            </div>
-          </div>
-
-          <div class="prospect-item">
-            <div class="prospect-header">
-              <div class="prospect-name">Connect Mobile</div>
-              <div class="prospect-date">March 2, 2025</div>
-            </div>
-            <div class="prospect-details">
-              <div>Algiers Center - Mobile</div>
-              <div>+213 555 789 456</div>
-            </div>
-            <div class="prospect-status status-pending">Pending</div>
-            <div class="prospect-actions">
-              <button class="btn btn-outline btn-small">
-                <i class="fas fa-info-circle"></i> Details
-              </button>
-              <button class="btn btn-primary btn-small">
-                <i class="fas fa-phone-alt"></i> Contact
-              </button>
-            </div>
-          </div>
-
-          <div class="prospect-item">
-            <div class="prospect-header">
-              <div class="prospect-name">Telecom Express</div>
-              <div class="prospect-date">March 1, 2025</div>
-            </div>
-            <div class="prospect-details">
-              <div>Bab Ezzouar - Telecom</div>
-              <div>+213 555 654 321</div>
-            </div>
-            <div class="prospect-status status-accepted">Accepted</div>
-            <div class="prospect-actions">
-              <button class="btn btn-outline btn-small">
-                <i class="fas fa-info-circle"></i> Details
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <a href="#" class="floating-button">
-          <i class="fas fa-plus"></i>
+        <!-- New Chat Button -->
+        <a href="#" class="new-chat-button">
+          <i class="fas fa-edit"></i>
         </a>
       </main>
 
@@ -718,12 +642,26 @@
             <i class="fas fa-store"></i>
             <span>POS</span>
           </li>
-          <li class="nav-item active">
+          <li class="nav-item">
             <i class="fas fa-search"></i>
             <span>Prospecting</span>
+          </li>
+          <li class="nav-item active">
+            <i class="fas fa-comment-alt"></i>
+            <span>Messages</span>
+          </li>
+          <li class="nav-item">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
           </li>
         </ul>
       </aside>
     </div>
+
+    <script>
+      function toggleChat() {
+        document.body.classList.toggle("show-chat");
+      }
+    </script>
   </body>
 </html>
